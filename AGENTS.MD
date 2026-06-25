@@ -8,7 +8,8 @@
 - 当前优先桌面端体验，暂时不重点处理小屏适配。
 - 用户明确说过：代码已格式化，不用优先管 lint。常规验证优先跑 `bun run build`；改 Rust 后再跑 `cargo check`。
 - 不要手动编辑 `src/routeTree.gen.ts`。路由变更后由 TanStack Router 插件、HMR 或 build 自动生成。
-- 前端和 Rust 通信用 Tauri `invoke`，新接口不要再新增 axios 调用。`axios` 依赖目前仍在 `package.json`，但新代码默认不依赖它。
+- 读取或写入包含中文的文件时必须显式使用 UTF-8 编码，避免 Windows 终端默认编码导致乱码读写。
+- 前端和 Rust 通信用 Tauri `invoke`，项目不再保留 axios；新接口不要新增 axios 调用。
 - UI 优先复用 shadcn/ui 已安装组件。需要新 shadcn 组件时，告诉用户安装，不要自己重造复杂基础组件。
 - 项目已有 `floating-nav`，不要再加传统 sidebar。
 - 需要安装外部依赖，如果该依赖是 Rust 需要的，则直接添加，后续使用 `cargo check` 下载，如果是前端项目，则直接告诉用户，由用户来安装相关依赖。
