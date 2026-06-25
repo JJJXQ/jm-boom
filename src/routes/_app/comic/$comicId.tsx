@@ -1,12 +1,5 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
-import { differenceInCalendarDays } from 'date-fns/differenceInCalendarDays'
-import { format } from 'date-fns/format'
-import { formatDistanceToNowStrict } from 'date-fns/formatDistanceToNowStrict'
-import { isValid } from 'date-fns/isValid'
-import { parse } from 'date-fns/parse'
-import { enUS } from 'date-fns/locale/en-US'
-import { zhCN } from 'date-fns/locale/zh-CN'
 import {
   ArrowLeftIcon,
   BookOpenIcon,
@@ -67,6 +60,19 @@ const COMMENTS_GC_TIME = 10 * 60 * 1000
 const COMMENT_SKELETON_COUNT = 6
 const CHAPTER_PAGE_SIZE = 10
 const SHOW_COVER_MASK = true
+const CHINESE_DATE_FORMATTER = new Intl.DateTimeFormat('zh-CN', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+})
+const CHINESE_DATE_TIME_FORMATTER = new Intl.DateTimeFormat('zh-CN', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false
+})
 
 function ComicDetailPage() {
   const { comicId } = Route.useParams()
@@ -885,32 +891,9 @@ function formatCommentTime(value: string) {
     return value || '未知时间'
   }
 
-  const days = differenceInCalendarDays(new Date(), parsed.date)
-
-  if (!parsed.hasTime) {
-    if (days > 7 || days < 0) {
-      return format(parsed.date, 'yyyy年M月d日', { locale: zhCN })
-    }
-
-    if (days === 0) {
-      return '今天'
-    }
-
-    if (days === 1) {
-      return '昨天'
-    }
-
-    return `${days}天前`
-  }
-
-  if (days > 7) {
-    return format(parsed.date, 'yyyy年M月d日 HH:mm', { locale: zhCN })
-  }
-
-  return formatDistanceToNowStrict(parsed.date, {
-    addSuffix: true,
-    locale: zhCN
-  })
+  return parsed.hasTime
+    ? CHINESE_DATE_TIME_FORMATTER.format(parsed.date)
+    : CHINESE_DATE_FORMATTER.format(parsed.date)
 }
 
 function parseCommentDate(value: string) {
@@ -934,38 +917,62 @@ function parseCommentDate(value: string) {
     }
   }
 
+  const localDate = parseLocalDate(normalizedValue)
+
+  if (localDate != null) {
+    return {
+      date: localDate.date,
+      hasTime: localDate.hasTime
+    }
+  }
+
   const directDate = new Date(normalizedValue)
 
-  if (isValid(directDate)) {
+  if (isValidDate(directDate)) {
     return {
       date: directDate,
       hasTime: hasTimeComponent(normalizedValue)
     }
   }
 
-  const formats = [
-    { format: 'yyyy-MM-dd HH:mm:ss', locale: zhCN, hasTime: true },
-    { format: 'yyyy-MM-dd HH:mm', locale: zhCN, hasTime: true },
-    { format: 'yyyy/MM/dd HH:mm:ss', locale: zhCN, hasTime: true },
-    { format: 'yyyy/MM/dd HH:mm', locale: zhCN, hasTime: true },
-    { format: 'MMM dd, yyyy', locale: enUS, hasTime: false },
-    { format: 'MMM d, yyyy', locale: enUS, hasTime: false }
-  ]
+  return null
+}
 
-  for (const item of formats) {
-    const parsedDate = parse(normalizedValue, item.format, new Date(), {
-      locale: item.locale
-    })
+function parseLocalDate(value: string) {
+  const match = /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/.exec(value)
 
-    if (isValid(parsedDate)) {
-      return {
-        date: parsedDate,
-        hasTime: item.hasTime
-      }
-    }
+  if (match == null) {
+    return null
   }
 
-  return null
+  const [, yearValue, monthValue, dayValue, hourValue, minuteValue, secondValue] = match
+  const year = Number(yearValue)
+  const month = Number(monthValue)
+  const day = Number(dayValue)
+  const hour = hourValue == null ? 0 : Number(hourValue)
+  const minute = minuteValue == null ? 0 : Number(minuteValue)
+  const second = secondValue == null ? 0 : Number(secondValue)
+  const date = new Date(year, month - 1, day, hour, minute, second)
+
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day ||
+    date.getHours() !== hour ||
+    date.getMinutes() !== minute ||
+    date.getSeconds() !== second
+  ) {
+    return null
+  }
+
+  return {
+    date,
+    hasTime: hourValue != null
+  }
+}
+
+function isValidDate(value: Date) {
+  return !Number.isNaN(value.getTime())
 }
 
 function hasTimeComponent(value: string) {
