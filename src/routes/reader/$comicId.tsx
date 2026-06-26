@@ -8,6 +8,7 @@ export const Route = createFileRoute('/reader/$comicId')({
     title: typeof search.title === 'string' ? search.title : '',
     chapter: typeof search.chapter === 'string' ? search.chapter : '',
     albumId: typeof search.albumId === 'string' ? search.albumId : '',
+    fromDetail: typeof search.fromDetail === 'string' ? search.fromDetail : '',
     nextId: typeof search.nextId === 'string' ? search.nextId : '',
     nextChapter: typeof search.nextChapter === 'string' ? search.nextChapter : ''
   }),
@@ -20,4 +21,3 @@ function ReaderRoute() {
 
   return <ReaderPage comicId={comicId} search={search} />
 }
-

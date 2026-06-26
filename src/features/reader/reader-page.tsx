@@ -1,4 +1,4 @@
-import { useRouter } from '@tanstack/react-router'
+import { useNavigate, useRouter } from '@tanstack/react-router'
 import { useCallback } from 'react'
 
 import { ReaderBottomBar, ReaderTopBar } from './reader-bars'
@@ -12,6 +12,7 @@ import { useReaderPages } from './use-reader-pages'
 import { useReaderToolbarVisibility } from './use-reader-toolbar-visibility'
 
 export function ReaderPage({ comicId, search }: { comicId: string; search: ReaderSearch }) {
+  const navigate = useNavigate()
   const router = useRouter()
   const {
     isVisible: isToolbarVisible,
@@ -34,7 +35,19 @@ export function ReaderPage({ comicId, search }: { comicId: string; search: Reade
     goToNextPage,
     retry
   } = useReaderPages(comicId)
-  const goBack = useCallback(() => router.history.back(), [router])
+  const goBack = useCallback(() => {
+    if (search.fromDetail === '1' && search.albumId.trim().length > 0) {
+      void navigate({ to: '/comic/$comicId', params: { comicId: search.albumId } })
+      return
+    }
+
+    if (window.history.length > 1) {
+      router.history.back()
+      return
+    }
+
+    void navigate({ to: '/' })
+  }, [navigate, router, search.albumId])
 
   useReaderKeyboardNavigation({
     onPrevious: goToPreviousPage,

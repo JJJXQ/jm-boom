@@ -23,7 +23,7 @@ export function sortChapters(chapters: ComicChapter[]) {
       return 0
     }
 
-    return rightSort - leftSort
+    return leftSort - rightSort
   })
 }
 
@@ -45,7 +45,7 @@ export function getNextChapter(currentId: string, chapters: ComicChapter[]) {
     return null
   }
 
-  return sortedChapters[currentIndex + 1] ?? null
+  return sortedChapters[currentIndex - 1] ?? null
 }
 
 export function getVisiblePages(currentPage: number, pageCount: number) {
@@ -180,4 +180,3 @@ function isValidDate(value: Date) {
 function hasTimeComponent(value: string) {
   return /(?:\d{1,2}:\d{2}|T\d{2})/.test(value)
 }
-
