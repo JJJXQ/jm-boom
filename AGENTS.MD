@@ -57,6 +57,14 @@
   - 单个格子 hover 使用 Tooltip 显示中文日期、签到状态和额外奖励提示。
   - 当前接口主要返回本月记录，前端优先用 `record.date` 匹配完整日期，无法解析时 fallback 到本月 `day` 序号；后续若用 app storage 保存历史月份，可直接按完整日期回填。
 
+- 设置页：`src/routes/_app/settings.tsx`
+  - 使用单个主 Card 展示全部配置大项，不保留右侧当前配置面板。
+  - API 接口不再使用静态白名单；设置页通过 Tauri command `discover_api_endpoints` 拉取 `newsvr-2025.txt`，合并本地 fallback 后统一测活测速。
+  - 本地 fallback API 端点为 `https://www.cdnhth.club` 和 `https://www.cdnhjk.net`；`newsvr-2025.txt` 仅作为动态候选来源，不直接当作业务 API。
+  - API 下拉展示连通状态和延迟，重测按钮会重新请求配置源并测速。
+  - 主题和封面隐私模式使用图标 Tabs；图片线路、预载数量、缓存上限使用 Select。
+  - 缓存区展示当前缓存大小、缓存上限、disabled 样式缓存路径、打开缓存目录按钮和 destructive 清理缓存按钮。
+
 - 应用壳：`src/routes/_app.tsx`
   - `floating-nav` 的 `me` 路由未登录时会拦截跳转并打开 `LoginDialog`。
   - 登录成功后自动跳转到 `/me`，个人页直接渲染 Zustand 中的用户数据。
@@ -72,6 +80,10 @@
   - 使用 Zustand 管理 `user`、`endpoint`、`isLoggingIn`、`login`、`logout`。
   - `login` 调用 Tauri `login` command，保存返回的 user 和 endpoint。
   - `logout` 调用 `clear_session` command 后清空本地 store。
+
+- `src/stores/settings-store.ts`
+  - 使用 Zustand persist 保存 `api`、图片线路、阅读预载数量、阅读缓存上限和封面隐私模式。
+  - `api` 是运行时字符串，不是固定 union；写入时只做 URL 规范化，允许选择动态发现出的 API endpoint。
 
 - `src/components/comic-feed.tsx`
   - `ComicGrid` 为 4 列网格。
@@ -90,6 +102,7 @@
 
 - 已注册 Tauri commands：
   - `get_remote_setting`
+  - `discover_api_endpoints`
   - `search_comics`
   - `get_home_feed`
   - `get_week_filters`
@@ -100,9 +113,18 @@
   - `get_sign_in_data`
   - `sign_in`
   - `clear_session`
+  - `get_reader_cache_stats`
+  - `clear_reader_cache`
+  - `open_reader_cache_dir`
   - `get_comic_read_manifest`
   - `get_comic_read_page`
   - `prefetch_comic_read_pages`
+
+- API / 数据源 Rust 侧要点：
+  - 当前移动端 API `tokenparam` 版本对齐 Breeze 插件为 `2.0.20`。
+  - `discover_api_endpoints` 会从两个 `newsvr-2025.txt` 配置源读取并 AES-ECB 解密 host 池，合并本地 fallback 后逐个请求 `/setting?app_img_shunt=1&t=...` 测活测速。
+  - 业务请求端不做编译期白名单限制，只规范化 http/https endpoint；空 endpoint 回退到 `https://www.cdnhth.club`。
+  - 首页 `promote` 数据过滤 `禁漫小說` 和 `禁漫書庫` 分组；当前项目只实现漫画图片阅读链路，小说类型暂不进入详情/阅读。
 
 - 用户 / 签到 Rust 侧要点：
   - `login` 使用 multipart 请求 `/login`，登录响应里的 `uid` 等数字字段可能是字符串，反序列化需兼容 string/number。
