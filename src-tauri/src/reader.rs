@@ -2,7 +2,6 @@ use crate::api::{
     build_http_client, current_timestamp, resolve_api_endpoint, ApiAuth, ApiError, ApiErrorKind,
     ApiResult,
 };
-use image::imageops::{crop_imm, replace};
 use image::{DynamicImage, ImageFormat, RgbaImage};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -567,10 +566,18 @@ fn decode_scrambled_image(
     page_name: &str,
 ) -> ApiResult<RgbaImage> {
     let rgba = original.to_rgba8();
-    let (natural_width, natural_height) = rgba.dimensions();
     let seed = calculate_seed(read_id, page_name);
-    let remainder = natural_height % seed;
+
+    Ok(reorder_scrambled_rgba_rows(&rgba, seed))
+}
+
+fn reorder_scrambled_rgba_rows(source: &RgbaImage, seed: u32) -> RgbaImage {
+    let (natural_width, natural_height) = source.dimensions();
+    let row_bytes = natural_width as usize * 4;
+    let source_bytes = source.as_raw();
     let mut decoded = RgbaImage::new(natural_width, natural_height);
+    let decoded_bytes = decoded.as_mut();
+    let remainder = natural_height % seed;
 
     for index in 0..seed {
         let mut height = natural_height / seed;
@@ -583,11 +590,17 @@ fn decode_scrambled_image(
             dy += remainder;
         }
 
-        let segment = crop_imm(&rgba, 0, sy, natural_width, height).to_image();
-        replace(&mut decoded, &segment, 0, i64::from(dy));
+        for row in 0..height {
+            let source_offset = (sy + row) as usize * row_bytes;
+            let target_offset = (dy + row) as usize * row_bytes;
+            let source_row = &source_bytes[source_offset..source_offset + row_bytes];
+            let target_row = &mut decoded_bytes[target_offset..target_offset + row_bytes];
+
+            target_row.copy_from_slice(source_row);
+        }
     }
 
-    Ok(decoded)
+    decoded
 }
 
 fn should_decode_image(manifest: &ReaderManifest, page: &ReaderPage) -> bool {
@@ -949,3 +962,4 @@ fn reader_response_preview(value: &str) -> String {
         .collect::<String>()
         .replace('\n', "\\n")
 }
+
