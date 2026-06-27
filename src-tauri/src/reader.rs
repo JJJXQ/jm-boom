@@ -3,7 +3,7 @@ use crate::api::{
     ApiResult,
 };
 use image::imageops::{crop_imm, replace};
-use image::{DynamicImage, GenericImageView, ImageFormat, RgbaImage};
+use image::{DynamicImage, ImageFormat, RgbaImage};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
@@ -505,25 +505,23 @@ fn write_reader_page_cache(
         fs::create_dir_all(parent).map_err(map_cache_error)?;
     }
 
-    let original = image::load_from_memory(bytes).map_err(map_image_error)?;
-    let (width, height) = original.dimensions();
-
-    if should_decode_image(manifest, page) {
-        let decoded = decode_scrambled_image(original, manifest.read_id_number, &page.page_name)?;
-        let (decoded_width, decoded_height) = decoded.dimensions();
-
-        DynamicImage::ImageRgba8(decoded)
-            .save_with_format(cache_path, ImageFormat::WebP)
-            .map_err(map_image_error)?;
+    if !should_decode_image(manifest, page) {
+        fs::write(cache_path, bytes).map_err(map_cache_error)?;
         cleanup_reader_cache(cache_root, cache_limit_bytes)?;
 
-        return Ok((decoded_width, decoded_height));
+        return Ok((0, 0));
     }
 
-    fs::write(cache_path, bytes).map_err(map_cache_error)?;
+    let original = image::load_from_memory(bytes).map_err(map_image_error)?;
+    let decoded = decode_scrambled_image(original, manifest.read_id_number, &page.page_name)?;
+    let (decoded_width, decoded_height) = decoded.dimensions();
+
+    DynamicImage::ImageRgba8(decoded)
+        .save_with_format(cache_path, ImageFormat::WebP)
+        .map_err(map_image_error)?;
     cleanup_reader_cache(cache_root, cache_limit_bytes)?;
 
-    Ok((width, height))
+    Ok((decoded_width, decoded_height))
 }
 
 fn decode_scrambled_image(

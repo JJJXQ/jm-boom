@@ -97,7 +97,7 @@ export function ReaderBottomBar({
           />
         </div>
         <div className="text-xs text-muted-foreground">
-          {pageCount === 0 ? 0 : currentIndex + 1} of Page {pageCount}
+          {pageCount === 0 ? 0 : currentIndex + 1} / {pageCount}
         </div>
       </footer>
 
