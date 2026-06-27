@@ -31,7 +31,6 @@ export function ReaderPage({ comicId, search }: { comicId: string; search: Reade
     pageCount,
     pageSrc,
     isLastPage,
-    isSettlingPage,
     isManifestLoading,
     manifestError,
     isPageLoading,
@@ -114,7 +113,7 @@ export function ReaderPage({ comicId, search }: { comicId: string; search: Reade
           <ReaderLoading label="正在加载阅读信息" />
         ) : manifestError ? (
           <ReaderError title="阅读信息加载失败" description={manifestError.message} />
-        ) : isSettlingPage || isPageLoading ? (
+        ) : isPageLoading ? (
           <ReaderLoading label="正在准备图片" />
         ) : pageError ? (
           <ReaderError title="图片加载失败" description={pageError.message} />
