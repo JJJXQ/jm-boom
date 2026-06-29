@@ -33,7 +33,7 @@
 - 发布日志按上一个 tag 到本次发布的 commit 生成，建议先看提交范围：
   - `git describe --tags --abbrev=0`
   - `git log <previous-tag>..HEAD --oneline`
-- 发布日志应包含这些固定板块，空板块可以写“无”：
+- 发布日志应包含这些固定板块，空板块可以忽略，首行不带类似本次发布的版本类似“# JM Boom v0.2.2”，由 `github actions` 完成：
   - `## 功能`
   - `## 优化`
   - `## 修复`
