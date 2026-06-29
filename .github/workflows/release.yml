@@ -4,21 +4,103 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag, for example v0.2.2'
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 concurrency:
-  group: release-${{ github.ref_name }}
+  group: release-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
-  build-windows:
-    name: Build Windows
-    runs-on: windows-2022
+  prepare-release:
+    name: Prepare Release
+    runs-on: ubuntu-22.04
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Validate release inputs
+        id: release
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            tag="$INPUT_TAG"
+          else
+            tag="$GITHUB_REF_NAME"
+          fi
+
+          if ! echo "$tag" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$'; then
+            echo "Release tag must look like v0.2.2, got: $tag" >&2
+            exit 1
+          fi
+
+          version="${tag#v}"
+          package_version="$(jq -r '.version' package.json)"
+          tauri_version="$(jq -r '.version' src-tauri/tauri.conf.json)"
+          cargo_version="$(awk -F' = ' '/^version = / { gsub(/"/, "", $2); print $2; exit }' src-tauri/Cargo.toml)"
+          lock_version="$(awk '$0 == "name = \"jm-boom\"" { found=1; next } found && /^version = / { gsub(/"/, "", $3); print $3; exit }' src-tauri/Cargo.lock)"
+
+          if [ "$package_version" != "$version" ] || [ "$tauri_version" != "$version" ] || [ "$cargo_version" != "$version" ] || [ "$lock_version" != "$version" ]; then
+            echo "Version mismatch for $tag" >&2
+            echo "package.json: $package_version" >&2
+            echo "src-tauri/tauri.conf.json: $tauri_version" >&2
+            echo "src-tauri/Cargo.toml: $cargo_version" >&2
+            echo "src-tauri/Cargo.lock: $lock_version" >&2
+            exit 1
+          fi
+
+          test -f "docs/release-notes/$tag.md"
+          for section in "功能" "优化" "修复" "其他"; do
+            if ! grep -q "^## $section" "docs/release-notes/$tag.md"; then
+              echo "docs/release-notes/$tag.md must contain section: ## $section" >&2
+              exit 1
+            fi
+          done
+
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            git fetch --tags --force
+            if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+              tag_sha="$(git rev-list -n 1 "$tag")"
+              if [ "$tag_sha" != "$GITHUB_SHA" ]; then
+                echo "Tag already exists at a different commit: $tag" >&2
+                echo "tag: $tag_sha" >&2
+                echo "current: $GITHUB_SHA" >&2
+                exit 1
+              fi
+              echo "Tag already exists at current commit: $tag"
+            else
+              git config user.name "github-actions[bot]"
+              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+              git tag "$tag" "$GITHUB_SHA"
+              git push origin "refs/tags/$tag"
+            fi
+          fi
+
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+  build-windows:
+    name: Build Windows
+    runs-on: windows-2022
+    needs: prepare-release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare-release.outputs.tag }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -62,7 +144,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           New-Item -ItemType Directory -Force -Path release-assets | Out-Null
-          $version = '${{ github.ref_name }}'
+          $version = '${{ needs.prepare-release.outputs.tag }}'
           $msi = Get-ChildItem -Path 'src-tauri/target/release/bundle/msi' -Recurse -Include *.msi | Select-Object -First 1
           if ($null -eq $msi) {
             throw 'No MSI artifact found'
@@ -85,10 +167,14 @@ jobs:
   publish-release:
     name: Publish GitHub Release
     runs-on: ubuntu-22.04
-    needs: build-windows
+    needs:
+      - prepare-release
+      - build-windows
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare-release.outputs.tag }}
 
       - name: Download release assets
         uses: actions/download-artifact@v8
@@ -98,34 +184,37 @@ jobs:
           merge-multiple: true
 
       - name: Ensure release notes
-        run: test -f "docs/release-notes/${GITHUB_REF_NAME}.md"
+        run: test -f "docs/release-notes/${{ needs.prepare-release.outputs.tag }}.md"
 
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ github.ref_name }}
-          name: JM Boom ${{ github.ref_name }}
-          body_path: docs/release-notes/${{ github.ref_name }}.md
+          tag_name: ${{ needs.prepare-release.outputs.tag }}
+          name: JM Boom ${{ needs.prepare-release.outputs.tag }}
+          body_path: docs/release-notes/${{ needs.prepare-release.outputs.tag }}.md
           prerelease: false
           files: release-assets/*
 
   assemble-latest-json:
     name: Assemble latest.json
     runs-on: ubuntu-22.04
-    needs: publish-release
+    needs:
+      - prepare-release
+      - publish-release
     steps:
       - name: Download release assets
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.prepare-release.outputs.tag }}
         run: |
           set -euo pipefail
           mkdir -p dl
-          gh release download "$GITHUB_REF_NAME" --dir dl --repo "$GITHUB_REPOSITORY"
+          gh release download "$TAG" --dir dl --repo "$GITHUB_REPOSITORY"
 
       - name: Generate latest.json
         env:
           REPO: ${{ github.repository }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ needs.prepare-release.outputs.tag }}
         run: |
           set -euo pipefail
           version="${TAG#v}"
@@ -156,4 +245,5 @@ jobs:
       - name: Upload latest.json to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "$GITHUB_REF_NAME" latest.json --clobber --repo "$GITHUB_REPOSITORY"
+          TAG: ${{ needs.prepare-release.outputs.tag }}
+        run: gh release upload "$TAG" latest.json --clobber --repo "$GITHUB_REPOSITORY"

@@ -131,6 +131,8 @@ function SettingsPage() {
     retry: false,
     refetchOnWindowFocus: false
   })
+  const hasAutoCheckedUpdateRef = useRef(false)
+  const isAutoCheckingUpdateRef = useRef(false)
   const checkUpdate = useMutation({
     mutationFn: checkAppUpdate,
     onSuccess: data => {
@@ -139,10 +141,17 @@ function SettingsPage() {
         return
       }
 
-      toast.success('当前已是最新版本')
+      if (!isAutoCheckingUpdateRef.current) {
+        toast.success('当前已是最新版本')
+      }
     },
     onError: error => {
-      toast.error(error instanceof Error ? error.message : String(error))
+      if (!isAutoCheckingUpdateRef.current) {
+        toast.error(error instanceof Error ? error.message : String(error))
+      }
+    },
+    onSettled: () => {
+      isAutoCheckingUpdateRef.current = false
     }
   })
   const installUpdate = useMutation({
@@ -160,6 +169,16 @@ function SettingsPage() {
   useEffect(() => {
     apiRef.current = api
   }, [api])
+
+  useEffect(() => {
+    if (hasAutoCheckedUpdateRef.current) {
+      return
+    }
+
+    hasAutoCheckedUpdateRef.current = true
+    isAutoCheckingUpdateRef.current = true
+    checkUpdate.mutate()
+  }, [checkUpdate])
 
   useEffect(() => {
     if (

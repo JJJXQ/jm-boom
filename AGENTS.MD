@@ -26,6 +26,24 @@
   - `cargo check`
 - 只有在新增或调整测试时再跑相关 `cargo test`；不要并行跑多个 Rust/Vite 构建。
 
+## 发布流程
+
+- 发布前必须同步修改三处版本号：`package.json`、`src-tauri/tauri.conf.json`、`src-tauri/Cargo.toml`；改完 Rust crate 版本后运行 `cargo check` 更新并验证 `src-tauri/Cargo.lock`。
+- 每个发布 tag 必须有对应发布日志：`docs/release-notes/<tag>.md`，例如 `docs/release-notes/v0.2.2.md`。
+- 发布日志按上一个 tag 到本次发布的 commit 生成，建议先看提交范围：
+  - `git describe --tags --abbrev=0`
+  - `git log <previous-tag>..HEAD --oneline`
+- 发布日志应包含这些固定板块，空板块可以写“无”：
+  - `## 功能`
+  - `## 优化`
+  - `## 修复`
+  - `## 其他`
+- 每条发布日志记录尽量带对应 commit hash 链接，格式示例：`- 设置页进入时自动检查更新 ([abc1234](https://github.com/ppxb/jm-boom/commit/abc1234))`。
+- GitHub Actions 发布方式：
+  - 自动发布：推送 `v*` tag 会触发 `.github/workflows/release.yml`。
+  - 手动发布：进入 GitHub `Actions -> Release -> Run workflow`，选择要发布的分支并填写 tag，例如 `v0.2.2`；workflow 会校验三处版本号、检查对应 release notes、自动创建并推送 tag，然后构建 Windows MSI、发布 GitHub Release 并生成 `latest.json`。
+- 当前在线更新只覆盖 Windows x64 MSI；`TAURI_SIGNING_PRIVATE_KEY` 必须配置在 GitHub Actions Secrets，`TAURI_UPDATER_PUBKEY` 已写入 `src-tauri/tauri.conf.json`，不需要作为 secret 维护。
+
 ## 参考项目
 
 - API / 数据源主要参考同级 `jm-mobile`。
