@@ -7,25 +7,28 @@ mod storage;
 mod updater;
 
 use api::{
-    ApiEndpointProbe, ComicCommentsResult, ComicDetailResult, FavoriteListResult,
-    FavoriteToggleResult, HomeFeedResult, HomeSectionListResult, LoginResult, RemoteSettingResult,
-    SearchResultContract, SignInDataResult, SignInResult, WeekFiltersResult, WeekItemsResult,
+    ApiEndpointProbe, ApiErrorDto, ApiErrorKind, ComicCommentsResult, ComicDetailResult,
+    FavoriteListResult, FavoriteToggleResult, HomeFeedResult, HomeSectionListResult, LoginResult,
+    RemoteSettingResult, SearchResultContract, SignInDataResult, SignInResult, WeekFiltersResult,
+    WeekItemsResult,
 };
 use reader::{ComicReadManifestResult, ComicReadPageResult, ReaderCacheStatsResult};
 use std::collections::HashMap;
 
-#[tauri::command]
-async fn get_remote_setting(endpoint: Option<String>) -> Result<RemoteSettingResult, String> {
-    api::get_remote_setting(endpoint)
-        .await
-        .map_err(|error| error.to_string())
+type CommandResult<T> = Result<T, ApiErrorDto>;
+
+fn command_string_error(kind: ApiErrorKind, error: impl Into<String>) -> ApiErrorDto {
+    ApiErrorDto::new(kind, error)
 }
 
 #[tauri::command]
-async fn discover_api_endpoints() -> Result<Vec<ApiEndpointProbe>, String> {
-    api::discover_api_endpoints()
-        .await
-        .map_err(|error| error.to_string())
+async fn get_remote_setting(endpoint: Option<String>) -> CommandResult<RemoteSettingResult> {
+    api::get_remote_setting(endpoint).await.map_err(Into::into)
+}
+
+#[tauri::command]
+async fn discover_api_endpoints() -> CommandResult<Vec<ApiEndpointProbe>> {
+    api::discover_api_endpoints().await.map_err(Into::into)
 }
 
 #[tauri::command]
@@ -34,17 +37,15 @@ async fn search_comics(
     page: Option<u32>,
     extern_payload: Option<HashMap<String, serde_json::Value>>,
     endpoint: Option<String>,
-) -> Result<SearchResultContract, String> {
+) -> CommandResult<SearchResultContract> {
     api::search_comics(keyword, page, extern_payload, endpoint)
         .await
-        .map_err(|error| error.to_string())
+        .map_err(Into::into)
 }
 
 #[tauri::command]
-async fn get_home_feed(endpoint: Option<String>) -> Result<HomeFeedResult, String> {
-    api::get_home_feed(endpoint)
-        .await
-        .map_err(|error| error.to_string())
+async fn get_home_feed(endpoint: Option<String>) -> CommandResult<HomeFeedResult> {
+    api::get_home_feed(endpoint).await.map_err(Into::into)
 }
 
 #[tauri::command]
@@ -61,7 +62,7 @@ async fn get_home_section_list(
     week: Option<String>,
     order: Option<String>,
     endpoint: Option<String>,
-) -> Result<HomeSectionListResult, String> {
+) -> CommandResult<HomeSectionListResult> {
     api::get_home_section_list(
         mode,
         page,
@@ -76,14 +77,12 @@ async fn get_home_section_list(
         endpoint,
     )
     .await
-    .map_err(|error| error.to_string())
+    .map_err(Into::into)
 }
 
 #[tauri::command]
-async fn get_week_filters(endpoint: Option<String>) -> Result<WeekFiltersResult, String> {
-    api::get_week_filters(endpoint)
-        .await
-        .map_err(|error| error.to_string())
+async fn get_week_filters(endpoint: Option<String>) -> CommandResult<WeekFiltersResult> {
+    api::get_week_filters(endpoint).await.map_err(Into::into)
 }
 
 #[tauri::command]
@@ -92,20 +91,20 @@ async fn get_week_items(
     category_id: String,
     type_id: String,
     endpoint: Option<String>,
-) -> Result<WeekItemsResult, String> {
+) -> CommandResult<WeekItemsResult> {
     api::get_week_items(page, category_id, type_id, endpoint)
         .await
-        .map_err(|error| error.to_string())
+        .map_err(Into::into)
 }
 
 #[tauri::command]
 async fn get_comic_detail(
     comic_id: String,
     endpoint: Option<String>,
-) -> Result<ComicDetailResult, String> {
+) -> CommandResult<ComicDetailResult> {
     api::get_comic_detail(comic_id, endpoint)
         .await
-        .map_err(|error| error.to_string())
+        .map_err(Into::into)
 }
 
 #[tauri::command]
@@ -113,10 +112,10 @@ async fn toggle_comic_favorite(
     comic_id: String,
     current_favorite: bool,
     endpoint: Option<String>,
-) -> Result<FavoriteToggleResult, String> {
+) -> CommandResult<FavoriteToggleResult> {
     api::toggle_comic_favorite(comic_id, current_favorite, endpoint)
         .await
-        .map_err(|error| error.to_string())
+        .map_err(Into::into)
 }
 
 #[tauri::command]
@@ -125,10 +124,10 @@ async fn get_favorite_comics(
     folder_id: Option<String>,
     order: Option<String>,
     endpoint: Option<String>,
-) -> Result<FavoriteListResult, String> {
+) -> CommandResult<FavoriteListResult> {
     api::get_favorite_comics(page, folder_id, order, endpoint)
         .await
-        .map_err(|error| error.to_string())
+        .map_err(Into::into)
 }
 
 #[tauri::command]
@@ -136,10 +135,10 @@ async fn get_comic_comments(
     comic_id: String,
     page: Option<u32>,
     endpoint: Option<String>,
-) -> Result<ComicCommentsResult, String> {
+) -> CommandResult<ComicCommentsResult> {
     api::get_comic_comments(comic_id, page, endpoint)
         .await
-        .map_err(|error| error.to_string())
+        .map_err(Into::into)
 }
 
 #[tauri::command]
@@ -147,20 +146,20 @@ async fn login(
     username: String,
     password: String,
     endpoint: Option<String>,
-) -> Result<LoginResult, String> {
+) -> CommandResult<LoginResult> {
     api::login(username, password, endpoint)
         .await
-        .map_err(|error| error.to_string())
+        .map_err(Into::into)
 }
 
 #[tauri::command]
 async fn get_sign_in_data(
     user_id: u32,
     endpoint: Option<String>,
-) -> Result<SignInDataResult, String> {
+) -> CommandResult<SignInDataResult> {
     api::get_sign_in_data(user_id, endpoint)
         .await
-        .map_err(|error| error.to_string())
+        .map_err(Into::into)
 }
 
 #[tauri::command]
@@ -168,10 +167,10 @@ async fn sign_in(
     user_id: u32,
     daily_id: u32,
     endpoint: Option<String>,
-) -> Result<SignInResult, String> {
+) -> CommandResult<SignInResult> {
     api::sign_in(user_id, daily_id, endpoint)
         .await
-        .map_err(|error| error.to_string())
+        .map_err(Into::into)
 }
 
 #[tauri::command]
@@ -184,61 +183,63 @@ fn configure_network_proxy(
     mode: String,
     host: Option<String>,
     port: Option<u16>,
-) -> Result<(), String> {
-    api::configure_network_proxy(mode, host, port).map_err(|error| error.to_string())
+) -> CommandResult<()> {
+    api::configure_network_proxy(mode, host, port).map_err(Into::into)
 }
 
 #[tauri::command]
 async fn get_reader_cache_stats(
     app: tauri::AppHandle,
     cache_limit_bytes: Option<u64>,
-) -> Result<ReaderCacheStatsResult, String> {
+) -> CommandResult<ReaderCacheStatsResult> {
     reader::get_reader_cache_stats(&app, cache_limit_bytes)
         .await
-        .map_err(|error| error.to_string())
+        .map_err(Into::into)
 }
 
 #[tauri::command]
 async fn clear_reader_cache(
     app: tauri::AppHandle,
     cache_limit_bytes: Option<u64>,
-) -> Result<ReaderCacheStatsResult, String> {
+) -> CommandResult<ReaderCacheStatsResult> {
     reader::clear_reader_cache(&app, cache_limit_bytes)
         .await
-        .map_err(|error| error.to_string())
+        .map_err(Into::into)
 }
 
 #[tauri::command]
-fn open_reader_cache_dir(app: tauri::AppHandle) -> Result<(), String> {
-    reader::open_reader_cache_dir(&app).map_err(|error| error.to_string())
+fn open_reader_cache_dir(app: tauri::AppHandle) -> CommandResult<()> {
+    reader::open_reader_cache_dir(&app).map_err(Into::into)
 }
 
 #[tauri::command]
-fn get_diagnostics_info(app: tauri::AppHandle) -> Result<diagnostics::DiagnosticsInfo, String> {
-    diagnostics::get_info(&app)
+fn get_diagnostics_info(app: tauri::AppHandle) -> CommandResult<diagnostics::DiagnosticsInfo> {
+    diagnostics::get_info(&app).map_err(|error| command_string_error(ApiErrorKind::Cache, error))
 }
 
 #[tauri::command]
-fn open_diagnostics_log_dir(app: tauri::AppHandle) -> Result<(), String> {
+fn open_diagnostics_log_dir(app: tauri::AppHandle) -> CommandResult<()> {
     diagnostics::open_log_dir(&app)
+        .map_err(|error| command_string_error(ApiErrorKind::Cache, error))
 }
 
 #[tauri::command]
 fn set_diagnostics_debug_logging(
     app: tauri::AppHandle,
     enabled: bool,
-) -> Result<diagnostics::DiagnosticsInfo, String> {
+) -> CommandResult<diagnostics::DiagnosticsInfo> {
     diagnostics::set_debug_logging_enabled(&app, enabled)
+        .map_err(|error| command_string_error(ApiErrorKind::Cache, error))
 }
 
 #[tauri::command]
 async fn get_comic_read_manifest(
     read_id: String,
     endpoint: Option<String>,
-) -> Result<ComicReadManifestResult, String> {
+) -> CommandResult<ComicReadManifestResult> {
     reader::get_comic_read_manifest(read_id, endpoint)
         .await
-        .map_err(|error| error.to_string())
+        .map_err(Into::into)
 }
 
 #[tauri::command]
@@ -249,7 +250,7 @@ async fn get_comic_read_page(
     endpoint: Option<String>,
     request_origin: Option<String>,
     cache_limit_bytes: Option<u64>,
-) -> Result<ComicReadPageResult, String> {
+) -> CommandResult<ComicReadPageResult> {
     reader::get_comic_read_page(
         &app,
         read_id,
@@ -259,64 +260,76 @@ async fn get_comic_read_page(
         cache_limit_bytes,
     )
     .await
-    .map_err(|error| error.to_string())
+    .map_err(Into::into)
 }
 
 #[tauri::command]
 async fn enqueue_comic_download(
     app: tauri::AppHandle,
     request: download::EnqueueDownloadRequest,
-) -> Result<download::DownloadTaskListResult, String> {
-    download::enqueue_comic_download(app, request).await
+) -> CommandResult<download::DownloadTaskListResult> {
+    download::enqueue_comic_download(app, request)
+        .await
+        .map_err(Into::into)
 }
 
 #[tauri::command]
 async fn list_download_tasks(
     app: tauri::AppHandle,
-) -> Result<download::DownloadTaskListResult, String> {
-    download::list_download_tasks(app).await
+) -> CommandResult<download::DownloadTaskListResult> {
+    download::list_download_tasks(app).await.map_err(Into::into)
 }
 
 #[tauri::command]
 async fn cancel_download_task(
     app: tauri::AppHandle,
     task_id: String,
-) -> Result<download::DownloadTaskListResult, String> {
-    download::cancel_download_task(app, task_id).await
+) -> CommandResult<download::DownloadTaskListResult> {
+    download::cancel_download_task(app, task_id)
+        .await
+        .map_err(Into::into)
 }
 
 #[tauri::command]
 async fn pause_download_task(
     app: tauri::AppHandle,
     task_id: String,
-) -> Result<download::DownloadTaskListResult, String> {
-    download::pause_download_task(app, task_id).await
+) -> CommandResult<download::DownloadTaskListResult> {
+    download::pause_download_task(app, task_id)
+        .await
+        .map_err(Into::into)
 }
 
 #[tauri::command]
 async fn resume_download_task(
     app: tauri::AppHandle,
     task_id: String,
-) -> Result<download::DownloadTaskListResult, String> {
-    download::resume_download_task(app, task_id).await
+) -> CommandResult<download::DownloadTaskListResult> {
+    download::resume_download_task(app, task_id)
+        .await
+        .map_err(Into::into)
 }
 
 #[tauri::command]
 async fn remove_download_task(
     app: tauri::AppHandle,
     task_id: String,
-) -> Result<download::DownloadTaskListResult, String> {
-    download::remove_download_task(app, task_id).await
+) -> CommandResult<download::DownloadTaskListResult> {
+    download::remove_download_task(app, task_id)
+        .await
+        .map_err(Into::into)
 }
 
 #[tauri::command]
-async fn open_download_task_dir(app: tauri::AppHandle, task_id: String) -> Result<(), String> {
-    download::open_download_task_dir(app, task_id).await
+async fn open_download_task_dir(app: tauri::AppHandle, task_id: String) -> CommandResult<()> {
+    download::open_download_task_dir(app, task_id)
+        .await
+        .map_err(Into::into)
 }
 
 #[tauri::command]
-fn open_download_root_dir(app: tauri::AppHandle) -> Result<(), String> {
-    download::open_download_root_dir(app)
+fn open_download_root_dir(app: tauri::AppHandle) -> CommandResult<()> {
+    download::open_download_root_dir(app).map_err(Into::into)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

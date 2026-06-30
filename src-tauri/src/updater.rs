@@ -1,4 +1,4 @@
-use crate::api;
+use crate::api::{self, ApiError, ApiErrorDto, ApiErrorKind, ApiResult};
 use serde::Serialize;
 use tauri::AppHandle;
 use tauri_plugin_updater::Updater;
@@ -15,15 +15,16 @@ pub struct AppUpdateCheckResult {
     pub pub_date: Option<String>,
 }
 
-#[tauri::command]
-pub async fn check_app_update(app: AppHandle) -> Result<AppUpdateCheckResult, String> {
-    let current_version = app.package_info().version.to_string();
-    let updater = build_updater(&app)?;
+type UpdateCommandResult<T> = Result<T, ApiErrorDto>;
 
-    let update = updater
-        .check()
-        .await
-        .map_err(|error| format!("检查更新失败: {error}"))?;
+#[tauri::command]
+pub async fn check_app_update(app: AppHandle) -> UpdateCommandResult<AppUpdateCheckResult> {
+    let current_version = app.package_info().version.to_string();
+    let updater = build_updater(&app).map_err(ApiErrorDto::from)?;
+
+    let update = updater.check().await.map_err(|error| {
+        ApiErrorDto::new(ApiErrorKind::Network, format!("检查更新失败: {error}"))
+    })?;
 
     Ok(match update {
         Some(update) => AppUpdateCheckResult {
@@ -44,25 +45,23 @@ pub async fn check_app_update(app: AppHandle) -> Result<AppUpdateCheckResult, St
 }
 
 #[tauri::command]
-pub async fn install_app_update(app: AppHandle) -> Result<bool, String> {
-    let updater = build_updater(&app)?;
+pub async fn install_app_update(app: AppHandle) -> UpdateCommandResult<bool> {
+    let updater = build_updater(&app).map_err(ApiErrorDto::from)?;
 
-    let Some(update) = updater
-        .check()
-        .await
-        .map_err(|error| format!("检查更新失败: {error}"))?
+    let Some(update) = updater.check().await.map_err(|error| {
+        ApiErrorDto::new(ApiErrorKind::Network, format!("检查更新失败: {error}"))
+    })?
     else {
         return Ok(false);
     };
 
-    let bytes = update
-        .download(|_, _| {}, || {})
-        .await
-        .map_err(|error| format!("下载更新失败: {error}"))?;
+    let bytes = update.download(|_, _| {}, || {}).await.map_err(|error| {
+        ApiErrorDto::new(ApiErrorKind::Network, format!("下载更新失败: {error}"))
+    })?;
 
     update
         .install(bytes)
-        .map_err(|error| format!("安装更新失败: {error}"))?;
+        .map_err(|error| ApiErrorDto::new(ApiErrorKind::Cache, format!("安装更新失败: {error}")))?;
 
     #[cfg(not(target_os = "windows"))]
     app.restart();
@@ -70,16 +69,20 @@ pub async fn install_app_update(app: AppHandle) -> Result<bool, String> {
     Ok(true)
 }
 
-fn build_updater(app: &AppHandle) -> Result<Updater, String> {
+fn build_updater(app: &AppHandle) -> ApiResult<Updater> {
     let mut builder = app.updater_builder();
 
-    if let Some(proxy_url) = api::current_proxy_url().map_err(|error| error.to_string())? {
-        let proxy = Url::parse(&proxy_url)
-            .map_err(|error| format!("解析更新代理失败 {proxy_url}: {error}"))?;
+    if let Some(proxy_url) = api::current_proxy_url()? {
+        let proxy = Url::parse(&proxy_url).map_err(|error| {
+            ApiError::new(
+                ApiErrorKind::UnsupportedEndpoint,
+                format!("解析更新代理失败 {proxy_url}: {error}"),
+            )
+        })?;
         builder = builder.proxy(proxy);
     }
 
     builder
         .build()
-        .map_err(|error| format!("初始化更新器失败: {error}"))
+        .map_err(|error| ApiError::new(ApiErrorKind::Client, format!("初始化更新器失败: {error}")))
 }
