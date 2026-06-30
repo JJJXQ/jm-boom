@@ -96,6 +96,8 @@ export function ReaderPage({ comicId, search }: { comicId: string; search: Reade
     onNavigate: hideToolbar
   })
 
+  const showReaderBars = isToolbarVisible && pageCount > 0
+
   return (
     <main
       className="relative flex h-screen overflow-hidden bg-neutral-950 text-neutral-50"
@@ -106,7 +108,7 @@ export function ReaderPage({ comicId, search }: { comicId: string; search: Reade
         title={title}
         chapter={chapter}
         isFetching={isFetching}
-        visible={isToolbarVisible}
+        visible={showReaderBars}
         onBack={goBack}
         onRetry={retry}
       />
@@ -136,7 +138,7 @@ export function ReaderPage({ comicId, search }: { comicId: string; search: Reade
         currentIndex={currentIndex}
         pageCount={pageCount}
         showNextChapter={isLastPage && nextChapter != null}
-        visible={isToolbarVisible}
+        visible={showReaderBars}
       />
     </main>
   )
