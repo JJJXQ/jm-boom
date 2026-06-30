@@ -15,7 +15,7 @@ pub(crate) type ApiResult<T> = Result<T, ApiError>;
 const API_VERSION: &str = "2.0.20";
 const API_SECRET: &str = "185Hcomic3PAPP7R";
 const DEFAULT_API_ENDPOINT: &str = FALLBACK_API_ENDPOINTS[0];
-const FALLBACK_API_ENDPOINTS: [&str; 2] = ["https://www.cdnhth.club", "https://www.cdnhjk.net"];
+const FALLBACK_API_ENDPOINTS: [&str; 2] = ["https://www.cdnhjk.net", "https://www.cdnhth.club"];
 const HOST_CONFIG_AES_SEED: &str = "diosfjckwpqpdfjkvnqQjsik";
 const HOST_CONFIG_URLS: [&str; 2] = [
     "https://rup4a04-c02.tos-cn-hongkong.bytepluses.com/newsvr-2025.txt",
@@ -424,8 +424,9 @@ struct LoginPayload {
     jwttoken: Option<String>,
     #[serde(default, deserialize_with = "deserialize_u32_from_any")]
     uid: u32,
+    #[serde(default, deserialize_with = "deserialize_string_from_any")]
     username: String,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_string_from_any")]
     email: String,
     #[serde(default)]
     photo: String,

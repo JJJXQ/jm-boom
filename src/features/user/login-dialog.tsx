@@ -35,7 +35,7 @@ function formatLoginError(error: unknown) {
       message
     )
   ) {
-    return '用户名或密码错误'
+    return '账号或密码错误'
   }
 
   return message || '请稍后重试'
@@ -86,14 +86,14 @@ export function LoginDialog({ open, onOpenChange, onLoginSuccess }: LoginDialogP
         </DialogHeader>
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor="username">用户名</FieldLabel>
+            <FieldLabel htmlFor="username">账号或邮箱</FieldLabel>
             <Input
               id="username"
               value={username}
               onChange={event => setUsername(event.target.value)}
               autoFocus
               autoComplete="username"
-              placeholder="请输入用户名"
+              placeholder="请输入账号或邮箱"
             />
           </Field>
           <Field>

@@ -2,8 +2,8 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 export const FALLBACK_API_ENDPOINTS = [
-  'https://www.cdnhth.club',
-  'https://www.cdnhjk.net'
+  'https://www.cdnhjk.net',
+  'https://www.cdnhth.club'
 ] as const
 
 export const READER_CACHE_LIMITS_MB = [128, 256, 512, 1024, 2048] as const
