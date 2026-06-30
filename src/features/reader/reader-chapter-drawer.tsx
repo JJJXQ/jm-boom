@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { XIcon } from 'lucide-react'
+import { useEffect, useMemo, useRef } from 'react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -28,6 +29,26 @@ export function ReaderChapterDrawer({
   currentReadId: string
   chapters: ReaderChapterItem[]
 }) {
+  const listRef = useRef<HTMLDivElement | null>(null)
+  const displayChapters = useMemo(() => [...chapters].reverse(), [chapters])
+
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      listRef.current
+        ?.querySelector<HTMLElement>('[data-current-chapter="true"]')
+        ?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        })
+    }, 180)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [currentReadId, displayChapters.length, open])
+
   return (
     <Drawer open={open} onOpenChange={onOpenChange} direction="right">
       <DrawerContent className="h-full w-[420px] max-w-[calc(100vw-24px)] overflow-hidden rounded-l-xl border-l border-white/10 bg-neutral-950/90 p-0 text-neutral-50 shadow-2xl backdrop-blur-xl before:hidden data-[vaul-drawer-direction=right]:w-[420px] data-[vaul-drawer-direction=right]:sm:max-w-[420px]">
@@ -49,8 +70,8 @@ export function ReaderChapterDrawer({
         </DrawerHeader>
 
         <nav className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-          <div className="space-y-2">
-            {chapters.map(chapter => {
+          <div ref={listRef} className="space-y-2">
+            {displayChapters.map(chapter => {
               const isCurrent = chapter.id === currentReadId
 
               return (
@@ -61,6 +82,7 @@ export function ReaderChapterDrawer({
                   replace
                   search={toReaderChapterSearch({ title, albumId, chapter, chapters })}
                   aria-current={isCurrent ? 'page' : undefined}
+                  data-current-chapter={isCurrent ? 'true' : undefined}
                   className={cn(
                     'flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-neutral-200 transition-colors hover:bg-white/10 hover:text-neutral-50 focus-visible:ring-[3px] focus-visible:ring-white/20 focus-visible:outline-none',
                     isCurrent && 'border-neutral-50/35 bg-white/10 text-neutral-50'

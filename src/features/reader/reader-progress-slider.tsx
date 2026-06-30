@@ -60,9 +60,12 @@ export function ReaderProgressSlider({
         disabled={pageCount <= 1}
         className={cn(
           'absolute inset-x-0 top-1/2 h-5 -translate-y-1/2 cursor-pointer appearance-none bg-transparent disabled:cursor-default disabled:opacity-60',
-          '[&::-moz-range-thumb]:size-1.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-track]:bg-transparent',
+          '[&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-track]:bg-transparent',
           '[&::-webkit-slider-runnable-track]:h-0.5 [&::-webkit-slider-runnable-track]:bg-transparent',
-          '[&::-webkit-slider-thumb]:mt-[-2px] [&::-webkit-slider-thumb]:size-1.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full',
+          '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full',
+          isScrubbing
+            ? '[&::-moz-range-thumb]:size-2.5 [&::-webkit-slider-thumb]:mt-[-4px] [&::-webkit-slider-thumb]:size-2.5'
+            : '[&::-moz-range-thumb]:size-1.5 [&::-webkit-slider-thumb]:mt-[-2px] [&::-webkit-slider-thumb]:size-1.5',
           showKnob
             ? '[&::-moz-range-thumb]:bg-neutral-50 [&::-webkit-slider-thumb]:bg-neutral-50 [&::-webkit-slider-thumb]:shadow'
             : '[&::-moz-range-thumb]:bg-transparent [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none'
