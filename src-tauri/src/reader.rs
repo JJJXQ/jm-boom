@@ -2,6 +2,7 @@ use crate::api::{
     build_http_client, current_jwt_token, resolve_api_endpoint, resolve_cached_img_host, ApiError,
     ApiErrorKind, ApiResult,
 };
+use crate::diagnostics;
 use aes::Aes256;
 use base64::prelude::{Engine as _, BASE64_STANDARD};
 use ecb::cipher::{block_padding::Pkcs7, BlockDecryptMut, KeyInit};
@@ -439,23 +440,27 @@ async fn materialize_reader_page_inner(
     if cache_path.exists() {
         match fs::metadata(&cache_path) {
             Ok(metadata) if metadata.is_file() => {
-                eprintln!(
+                diagnostics::debug(format!(
                     "Reader page cache hit read_id={} page={} origin={} lock_wait_ms={:.1} total_ms={:.1}",
                     manifest.read_id,
                     index + 1,
                     origin.as_str(),
                     elapsed_ms(lock_wait_elapsed),
                     elapsed_ms(materialize_started_at.elapsed()),
-                );
+                ));
 
                 return Ok(page_result(manifest, index, cache_path, 0, 0, true));
             }
             Ok(_) => {
-                eprintln!("Failed to read cached reader page, refreshing it: cached path is not a file");
+                diagnostics::warn(
+                    "Failed to read cached reader page, refreshing it: cached path is not a file",
+                );
                 let _ = fs::remove_file(&cache_path);
             }
             Err(error) => {
-                eprintln!("Failed to read cached reader page, refreshing it: {error}");
+                diagnostics::warn(format!(
+                    "Failed to read cached reader page, refreshing it: {error}"
+                ));
                 let _ = fs::remove_file(&cache_path);
             }
         }
@@ -493,7 +498,7 @@ async fn materialize_reader_page_inner(
         .elapsed()
         .saturating_sub(download_elapsed);
 
-    eprintln!(
+    diagnostics::debug(format!(
         "Reader page materialized read_id={} page={} origin={} lock_wait_ms={:.1} download_ms={:.1} cache_ms={:.1} total_ms={:.1}",
         manifest.read_id,
         index + 1,
@@ -502,7 +507,7 @@ async fn materialize_reader_page_inner(
         elapsed_ms(download_elapsed),
         elapsed_ms(cache_elapsed),
         elapsed_ms(materialize_started_at.elapsed())
-    );
+    ));
 
     Ok(page_result(
         manifest, index, cache_path, width, height, false,
@@ -657,7 +662,10 @@ fn write_reader_page_file(
     Ok((decoded_width, decoded_height))
 }
 
-pub(crate) fn reader_page_output_extension(manifest: &ReaderManifest, index: u32) -> ApiResult<&'static str> {
+pub(crate) fn reader_page_output_extension(
+    manifest: &ReaderManifest,
+    index: u32,
+) -> ApiResult<&'static str> {
     let page = manifest
         .pages
         .get(index as usize)
@@ -693,7 +701,7 @@ fn log_reader_cache_timing(
         .collect::<Vec<_>>()
         .join(" ");
 
-    eprintln!(
+    diagnostics::debug(format!(
         "Reader cache write read_id={} page={} origin={} mode={} {} {}",
         manifest.read_id,
         page.index + 1,
@@ -701,7 +709,7 @@ fn log_reader_cache_timing(
         mode,
         size_info,
         timings
-    );
+    ));
 }
 
 fn reader_cache_size_log(source_bytes: u64, output_bytes: Option<u64>) -> String {
@@ -946,10 +954,10 @@ fn cleanup_reader_cache(cache_root: &Path, cache_limit_bytes: u64) -> ApiResult<
                 current_size = current_size.saturating_sub(file.size);
             }
             Err(error) => {
-                eprintln!(
+                diagnostics::warn(format!(
                     "Failed to remove reader cache file {:?}: {error}",
                     file.path
-                );
+                ));
             }
         }
     }

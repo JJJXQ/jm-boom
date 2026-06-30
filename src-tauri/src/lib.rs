@@ -1,4 +1,5 @@
 mod api;
+mod diagnostics;
 mod download;
 mod plugin_codec;
 mod reader;
@@ -207,6 +208,24 @@ fn open_reader_cache_dir(app: tauri::AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn get_diagnostics_info(app: tauri::AppHandle) -> Result<diagnostics::DiagnosticsInfo, String> {
+    diagnostics::get_info(&app)
+}
+
+#[tauri::command]
+fn open_diagnostics_log_dir(app: tauri::AppHandle) -> Result<(), String> {
+    diagnostics::open_log_dir(&app)
+}
+
+#[tauri::command]
+fn set_diagnostics_debug_logging(
+    app: tauri::AppHandle,
+    enabled: bool,
+) -> Result<diagnostics::DiagnosticsInfo, String> {
+    diagnostics::set_debug_logging_enabled(&app, enabled)
+}
+
+#[tauri::command]
 async fn get_comic_read_manifest(
     read_id: String,
     endpoint: Option<String>,
@@ -297,6 +316,13 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .setup(|app| {
+            let handle = app.handle().clone();
+            let _ = diagnostics::init(&handle);
+            diagnostics::info("JM Boom started");
+
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             get_remote_setting,
             discover_api_endpoints,
@@ -317,6 +343,9 @@ pub fn run() {
             get_reader_cache_stats,
             clear_reader_cache,
             open_reader_cache_dir,
+            get_diagnostics_info,
+            open_diagnostics_log_dir,
+            set_diagnostics_debug_logging,
             get_comic_read_manifest,
             get_comic_read_page,
             enqueue_comic_download,

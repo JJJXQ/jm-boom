@@ -1,4 +1,4 @@
-use crate::plugin_codec::decode_setting_payload;
+use crate::{diagnostics, plugin_codec::decode_setting_payload};
 use aes::Aes256;
 use base64::prelude::{Engine as _, BASE64_STANDARD};
 use ecb::cipher::{block_padding::Pkcs7, BlockDecryptMut, KeyInit};
@@ -952,7 +952,9 @@ pub async fn search_comics(
     let img_host = match request_remote_img_host(&client, &endpoint, &setting_auth).await {
         Ok(img_host) => Some(img_host),
         Err(error) => {
-            eprintln!("Failed to load remote setting for search covers: {error}");
+            diagnostics::warn(format!(
+                "Failed to load remote setting for search covers: {error}"
+            ));
             None
         }
     };
@@ -971,7 +973,9 @@ pub async fn search_comics(
                     ));
                 }
                 Err(error) => {
-                    eprintln!("Failed direct search detail fallback for {comic_id}: {error}");
+                    diagnostics::warn(format!(
+                        "Failed direct search detail fallback for {comic_id}: {error}"
+                    ));
                 }
             }
         }
@@ -998,7 +1002,9 @@ pub async fn get_home_feed(endpoint: Option<String>) -> ApiResult<HomeFeedResult
     let img_host = match request_remote_img_host(&client, &endpoint, &setting_auth).await {
         Ok(img_host) => Some(img_host),
         Err(error) => {
-            eprintln!("Failed to load remote setting for home covers: {error}");
+            diagnostics::warn(format!(
+                "Failed to load remote setting for home covers: {error}"
+            ));
             None
         }
     };
@@ -1056,7 +1062,9 @@ pub async fn get_home_section_list(
     let img_host = match img_host_result {
         Ok(img_host) => Some(img_host),
         Err(error) => {
-            eprintln!("Failed to load remote setting for home section list covers: {error}");
+            diagnostics::warn(format!(
+                "Failed to load remote setting for home section list covers: {error}"
+            ));
             None
         }
     };
@@ -1123,7 +1131,9 @@ pub async fn get_week_items(
     let img_host = match img_host_result {
         Ok(img_host) => Some(img_host),
         Err(error) => {
-            eprintln!("Failed to load remote setting for weekly covers: {error}");
+            diagnostics::warn(format!(
+                "Failed to load remote setting for weekly covers: {error}"
+            ));
             None
         }
     };
@@ -1164,7 +1174,9 @@ pub async fn get_comic_detail(
     let img_host = match img_host_result {
         Ok(img_host) => Some(img_host),
         Err(error) => {
-            eprintln!("Failed to load remote setting for detail images: {error}");
+            diagnostics::warn(format!(
+                "Failed to load remote setting for detail images: {error}"
+            ));
             None
         }
     };
@@ -1237,7 +1249,9 @@ pub async fn get_favorite_comics(
     let img_host = match img_host_result {
         Ok(img_host) => Some(img_host),
         Err(error) => {
-            eprintln!("Failed to load remote setting for favorite covers: {error}");
+            diagnostics::warn(format!(
+                "Failed to load remote setting for favorite covers: {error}"
+            ));
             None
         }
     };
@@ -1299,7 +1313,9 @@ pub async fn get_comic_comments(
     let img_host = match img_host_result {
         Ok(img_host) => Some(img_host),
         Err(error) => {
-            eprintln!("Failed to load remote setting for comment avatars: {error}");
+            diagnostics::warn(format!(
+                "Failed to load remote setting for comment avatars: {error}"
+            ));
             None
         }
     };
@@ -1344,7 +1360,9 @@ pub async fn login(
     let img_host = match img_host_result {
         Ok(img_host) => Some(img_host),
         Err(error) => {
-            eprintln!("Failed to load remote setting for user avatar: {error}");
+            diagnostics::warn(format!(
+                "Failed to load remote setting for user avatar: {error}"
+            ));
             None
         }
     };
@@ -1698,7 +1716,9 @@ async fn discover_api_endpoint_candidates(client: &reqwest::Client) -> ApiResult
             );
         }
         Err(error) => {
-            eprintln!("Failed to load JM host config, fallback endpoints only: {error}");
+            diagnostics::warn(format!(
+                "Failed to load JM host config, fallback endpoints only: {error}"
+            ));
         }
     }
 

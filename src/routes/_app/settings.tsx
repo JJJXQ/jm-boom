@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tan
 import { createFileRoute } from '@tanstack/react-router'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import {
+  BugIcon,
   CheckCircle2Icon,
   Trash2Icon,
   FolderOpenIcon,
@@ -42,10 +43,14 @@ import {
   checkAppUpdate,
   configureNetworkProxy,
   discoverApiEndpoints,
+  getDiagnosticsInfo,
   getCurrentAppVersion,
   installAppUpdate,
+  openDiagnosticsLogDir,
+  setDiagnosticsDebugLogging,
   type ApiEndpointProbe,
-  type AppUpdateCheckResult
+  type AppUpdateCheckResult,
+  type DiagnosticsInfo
 } from '@/lib/api/setting'
 import {
   clearReaderCache,
@@ -120,6 +125,28 @@ function SettingsPage() {
   })
   const openCacheDir = useMutation({
     mutationFn: openReaderCacheDir,
+    onError: error => {
+      toast.error(error instanceof Error ? error.message : String(error))
+    }
+  })
+  const diagnosticsInfo = useQuery({
+    queryKey: ['diagnostics-info'],
+    queryFn: getDiagnosticsInfo,
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: false
+  })
+  const openDiagnosticsDir = useMutation({
+    mutationFn: openDiagnosticsLogDir,
+    onError: error => {
+      toast.error(error instanceof Error ? error.message : String(error))
+    }
+  })
+  const setDiagnosticsDebug = useMutation({
+    mutationFn: setDiagnosticsDebugLogging,
+    onSuccess: data => {
+      queryClient.setQueryData(['diagnostics-info'], data)
+      toast.success(data.debugLoggingEnabled ? '性能调试日志已开启' : '性能调试日志已关闭')
+    },
     onError: error => {
       toast.error(error instanceof Error ? error.message : String(error))
     }
@@ -441,6 +468,41 @@ function SettingsPage() {
             <Separator />
 
             <section className="space-y-5">
+              <SectionTitle icon={<BugIcon className="size-4" />} title="调试诊断" />
+              <SettingRow title="运行日志" description="默认记录运行警告和错误，便于反馈问题">
+                <div className="flex items-center gap-2">
+                  <Input
+                    disabled
+                    value={diagnosticsLogDirValue(diagnosticsInfo)}
+                    title={diagnosticsInfo.data?.logDir ?? ''}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    disabled={openDiagnosticsDir.isPending}
+                    onClick={() => openDiagnosticsDir.mutate()}
+                  >
+                    {openDiagnosticsDir.isPending ? (
+                      <LoaderCircleIcon className="size-4 animate-spin" />
+                    ) : (
+                      <FolderOpenIcon className="size-4" />
+                    )}
+                  </Button>
+                </div>
+              </SettingRow>
+              <SettingRow title="性能调试日志" description="记录阅读器缓存、预取和图片处理耗时">
+                <Switch
+                  checked={diagnosticsInfo.data?.debugLoggingEnabled ?? false}
+                  disabled={diagnosticsInfo.isLoading || setDiagnosticsDebug.isPending}
+                  onCheckedChange={enabled => setDiagnosticsDebug.mutate(enabled)}
+                />
+              </SettingRow>
+            </section>
+
+            <Separator />
+
+            <section className="space-y-5">
               <SectionTitle icon={<ShieldIcon className="size-4" />} title="NSFW 保护" />
               <SettingRow title="封面隐私模式" description="控制列表项是否遮挡封面">
                 <Switch checked={hideCovers} onCheckedChange={setHideCovers} />
@@ -607,6 +669,18 @@ function CacheSize({ stats }: { stats: UseQueryResult<ReaderCacheStatsResult, Er
       <div className="mt-1 text-xs text-muted-foreground">{stats.data.fileCount} 个文件</div>
     </div>
   )
+}
+
+function diagnosticsLogDirValue(stats: UseQueryResult<DiagnosticsInfo, Error>) {
+  if (stats.isLoading) {
+    return '正在读取路径'
+  }
+
+  if (stats.isError) {
+    return '读取失败'
+  }
+
+  return stats.data?.logDir ?? ''
 }
 
 function AppUpdatePanel({

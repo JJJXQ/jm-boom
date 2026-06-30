@@ -28,6 +28,13 @@ export type AppUpdateCheckResult = {
   pubDate: string | null
 }
 
+export type DiagnosticsInfo = {
+  logDir: string
+  debugLoggingEnabled: boolean
+  maxLogFileBytes: number
+  maxLogFileCount: number
+}
+
 export async function getRemoteSetting({
   endpoint = null
 }: RemoteSettingParams = {}): Promise<RemoteSetting> {
@@ -90,4 +97,40 @@ export async function installAppUpdate(): Promise<boolean> {
   }
 
   return invoke<boolean>('install_app_update')
+}
+
+export async function getDiagnosticsInfo(): Promise<DiagnosticsInfo> {
+  if (!('__TAURI_INTERNALS__' in window)) {
+    return emptyDiagnosticsInfo()
+  }
+
+  return invoke<DiagnosticsInfo>('get_diagnostics_info')
+}
+
+export async function openDiagnosticsLogDir(): Promise<void> {
+  if (!('__TAURI_INTERNALS__' in window)) {
+    return
+  }
+
+  return invoke('open_diagnostics_log_dir')
+}
+
+export async function setDiagnosticsDebugLogging(enabled: boolean): Promise<DiagnosticsInfo> {
+  if (!('__TAURI_INTERNALS__' in window)) {
+    return {
+      ...emptyDiagnosticsInfo(),
+      debugLoggingEnabled: enabled
+    }
+  }
+
+  return invoke<DiagnosticsInfo>('set_diagnostics_debug_logging', { enabled })
+}
+
+function emptyDiagnosticsInfo(): DiagnosticsInfo {
+  return {
+    logDir: '',
+    debugLoggingEnabled: import.meta.env.DEV,
+    maxLogFileBytes: 0,
+    maxLogFileCount: 0
+  }
 }

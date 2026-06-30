@@ -108,7 +108,7 @@
 - 预取在当前页 ready 后触发；同一窗口用 `prefetchKeyRef` 去重。
 - Rust 侧有同缓存路径 single-flight 锁，避免同一页重复冷处理。
 - 缓存写入使用同目录 `.tmp` 文件，完成后 rename 为正式缓存文件；缓存统计和清理跳过 `.tmp`，避免并发读取半写文件。
-- 当前阅读器性能日志包含 `origin=visible|prefetch`、`lock_wait_ms`、`download_ms`、`cache_ms`、`load_ms`、`reorder_ms`、`encode_ms`、`write_ms`、`cleanup_ms`、`source_kb`、`output_kb`、`ratio`、`delta_kb`。
+- 开启性能调试日志时，阅读器日志包含 `origin=visible|prefetch`、`lock_wait_ms`、`download_ms`、`cache_ms`、`load_ms`、`reorder_ms`、`encode_ms`、`write_ms`、`cleanup_ms`、`source_kb`、`output_kb`、`ratio`、`delta_kb`。
 - 当前没有单独的 Rust `prefetch_comic_read_pages` command，也没有设置页“预载数量/阅读线路”选项；如需恢复，先重新设计前后端契约。
 
 ## 重构优化 TODO LIST
@@ -124,11 +124,11 @@
 
 ### Phase 1：运行日志与 DEBUG 日志治理
 
-- [ ] 去掉或门控发布版中的临时调试输出：`eprintln!`、`console.debug`、过量 reader 性能日志等。
-- [ ] 引入应用打包后的运行日志，用于用户反馈问题排查；默认记录 `info/warn/error`，开发调参日志仅在 debug 或显式开关下启用。
-- [ ] 日志写入应用日志目录，在设置增加调试，提供“打开日志目录”或“导出诊断日志”入口；日志需有大小限制或轮转策略。
-- [ ] 日志内容避免敏感信息：不记录密码、JWT、完整鉴权 header；endpoint 可记录 host/耗时/状态，必要时脱敏。
-- [ ] 统一 Rust 侧日志入口，优先考虑 `tracing`/`log` facade 或 Tauri 日志插件；前端错误后续接入同一诊断路径。
+- [x] 去掉或门控发布版中的临时调试输出：`eprintln!`、`console.debug`、过量 reader 性能日志等。
+- [x] 引入应用打包后的运行日志，用于用户反馈问题排查；默认记录 `info/warn/error`，开发调参日志仅在 debug 或显式开关下启用。
+- [x] 日志写入应用日志目录，在设置增加调试，提供“打开日志目录”或“导出诊断日志”入口；日志需有大小限制或轮转策略。
+- [x] 日志内容避免敏感信息：不记录密码、JWT、完整鉴权 header；endpoint 可记录 host/耗时/状态，必要时脱敏。
+- [x] 统一 Rust 侧日志入口，优先考虑 `tracing`/`log` facade 或 Tauri 日志插件；前端错误后续接入同一诊断路径。
 - 建议 commit msg：`feat(logging): add runtime diagnostics and gate debug logs`。
 
 ### Phase 2：前端基础清理

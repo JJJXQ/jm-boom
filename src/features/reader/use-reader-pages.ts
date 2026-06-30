@@ -150,7 +150,9 @@ export function useReaderPages(comicId: string, initialIndex = 0) {
             gcTime: READER_GC_TIME
           })
           .catch(error => {
-            console.debug('Reader page prefetch failed', error)
+            if (import.meta.env.DEV) {
+              console.debug('Reader page prefetch failed', error)
+            }
           })
       }
     })()

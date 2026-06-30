@@ -1,4 +1,5 @@
 use crate::api::{resolve_api_endpoint, ApiError, ApiErrorKind, ApiResult};
+use crate::diagnostics;
 use crate::reader;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
@@ -96,35 +97,39 @@ pub fn list_download_tasks(app: AppHandle) -> Result<DownloadTaskListResult, Str
         .map_err(|error| error.to_string())
 }
 
-pub fn cancel_download_task(app: AppHandle, task_id: String) -> Result<DownloadTaskListResult, String> {
+pub fn cancel_download_task(
+    app: AppHandle,
+    task_id: String,
+) -> Result<DownloadTaskListResult, String> {
     let manager = download_manager(app);
-    manager
-        .cancel(task_id)
-        .map_err(|error| error.to_string())?;
+    manager.cancel(task_id).map_err(|error| error.to_string())?;
     manager.list().map_err(|error| error.to_string())
 }
 
-pub fn pause_download_task(app: AppHandle, task_id: String) -> Result<DownloadTaskListResult, String> {
+pub fn pause_download_task(
+    app: AppHandle,
+    task_id: String,
+) -> Result<DownloadTaskListResult, String> {
     let manager = download_manager(app);
-    manager
-        .pause(task_id)
-        .map_err(|error| error.to_string())?;
+    manager.pause(task_id).map_err(|error| error.to_string())?;
     manager.list().map_err(|error| error.to_string())
 }
 
-pub fn resume_download_task(app: AppHandle, task_id: String) -> Result<DownloadTaskListResult, String> {
+pub fn resume_download_task(
+    app: AppHandle,
+    task_id: String,
+) -> Result<DownloadTaskListResult, String> {
     let manager = download_manager(app);
-    manager
-        .resume(task_id)
-        .map_err(|error| error.to_string())?;
+    manager.resume(task_id).map_err(|error| error.to_string())?;
     manager.list().map_err(|error| error.to_string())
 }
 
-pub fn remove_download_task(app: AppHandle, task_id: String) -> Result<DownloadTaskListResult, String> {
+pub fn remove_download_task(
+    app: AppHandle,
+    task_id: String,
+) -> Result<DownloadTaskListResult, String> {
     let manager = download_manager(app);
-    manager
-        .remove(task_id)
-        .map_err(|error| error.to_string())?;
+    manager.remove(task_id).map_err(|error| error.to_string())?;
     manager.list().map_err(|error| error.to_string())
 }
 
@@ -159,8 +164,13 @@ impl DownloadManager {
         let chapters = normalize_chapters(request.chapters)?;
         self.load_tasks_if_needed()?;
         let now = current_timestamp();
-        let task_id = format!("{now}-{}", short_hash(&format!("{album_id}-{comic_title}-{now}")));
-        let output_dir = task_output_dir(&self.app, &comic_title)?.to_string_lossy().to_string();
+        let task_id = format!(
+            "{now}-{}",
+            short_hash(&format!("{album_id}-{comic_title}-{now}"))
+        );
+        let output_dir = task_output_dir(&self.app, &comic_title)?
+            .to_string_lossy()
+            .to_string();
         let task = DownloadTask {
             task_id,
             album_id,
@@ -205,7 +215,9 @@ impl DownloadManager {
         }
 
         Ok(DownloadTaskListResult {
-            root_dir: download_files_root(&self.app)?.to_string_lossy().to_string(),
+            root_dir: download_files_root(&self.app)?
+                .to_string_lossy()
+                .to_string(),
             tasks,
         })
     }
@@ -220,7 +232,9 @@ impl DownloadManager {
         if let Some(task) = state.tasks.iter_mut().find(|task| task.task_id == task_id) {
             if matches!(
                 task.status,
-                DownloadTaskStatus::Queued | DownloadTaskStatus::Running | DownloadTaskStatus::Paused
+                DownloadTaskStatus::Queued
+                    | DownloadTaskStatus::Running
+                    | DownloadTaskStatus::Paused
             ) {
                 task.status = DownloadTaskStatus::Cancelled;
                 task.updated_at = current_timestamp();
@@ -358,7 +372,7 @@ impl DownloadManager {
             let next_task = match self.mark_next_task_running() {
                 Ok(task) => task,
                 Err(error) => {
-                    eprintln!("Failed to read download queue: {error}");
+                    diagnostics::warn(format!("Failed to read download queue: {error}"));
                     None
                 }
             };
@@ -446,7 +460,8 @@ impl DownloadManager {
                     downloaded_bytes =
                         downloaded_bytes.saturating_add(file_size_bytes(&target_path).unwrap_or(0));
                 }
-                let eta_seconds = estimate_eta(task_started_at.elapsed(), completed_pages, total_pages);
+                let eta_seconds =
+                    estimate_eta(task_started_at.elapsed(), completed_pages, total_pages);
                 let speed_bytes_per_second =
                     estimate_speed(task_started_at.elapsed(), downloaded_bytes);
                 self.update_task(&task.task_id, |task| {
@@ -481,7 +496,10 @@ impl DownloadManager {
             .unwrap_or(DownloadTaskStatus::Cancelled);
 
         if status == DownloadTaskStatus::Cancelled {
-            return Err(ApiError::new(ApiErrorKind::Cache, "Download task cancelled"));
+            return Err(ApiError::new(
+                ApiErrorKind::Cache,
+                "Download task cancelled",
+            ));
         }
 
         if status == DownloadTaskStatus::Paused {
@@ -572,14 +590,16 @@ fn recover_interrupted_tasks(tasks: &mut [DownloadTask]) -> bool {
     recovered
 }
 
-fn migrate_pending_task_output_dirs(app: &AppHandle, tasks: &mut [DownloadTask]) -> ApiResult<bool> {
+fn migrate_pending_task_output_dirs(
+    app: &AppHandle,
+    tasks: &mut [DownloadTask],
+) -> ApiResult<bool> {
     let mut migrated = false;
 
     for task in tasks {
         if !matches!(
             task.status,
-            DownloadTaskStatus::Queued | DownloadTaskStatus::Running
-                | DownloadTaskStatus::Paused
+            DownloadTaskStatus::Queued | DownloadTaskStatus::Running | DownloadTaskStatus::Paused
         ) {
             continue;
         }
@@ -599,7 +619,9 @@ fn migrate_pending_task_output_dirs(app: &AppHandle, tasks: &mut [DownloadTask])
     Ok(migrated)
 }
 
-fn normalize_chapters(chapters: Vec<DownloadChapterRequest>) -> ApiResult<Vec<DownloadChapterRequest>> {
+fn normalize_chapters(
+    chapters: Vec<DownloadChapterRequest>,
+) -> ApiResult<Vec<DownloadChapterRequest>> {
     let chapters = chapters
         .into_iter()
         .filter_map(|chapter| {
@@ -770,7 +792,10 @@ fn safe_path_segment(value: &str) -> String {
         .chars()
         .map(|character| {
             if character.is_control()
-                || matches!(character, '<' | '>' | ':' | '"' | '/' | '\\' | '|' | '?' | '*')
+                || matches!(
+                    character,
+                    '<' | '>' | ':' | '"' | '/' | '\\' | '|' | '?' | '*'
+                )
             {
                 '_'
             } else {
