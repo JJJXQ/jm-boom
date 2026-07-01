@@ -118,7 +118,7 @@ function SearchPage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto w-full max-w-6xl space-y-6 p-[96px_32px_32px_96px]">
+      <div className="mx-auto w-full max-w-6xl space-y-6 p-[32px_32px_16px_96px]">
         <PageBackButton />
         <FeedHeader
           title="搜索"

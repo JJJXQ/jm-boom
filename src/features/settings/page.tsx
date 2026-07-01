@@ -18,11 +18,7 @@ import {
   setDiagnosticsDebugLogging
 } from '@/lib/api/setting'
 import { clearReaderCache, getReaderCacheStats, openReaderCacheDir } from '@/lib/api/reader'
-import {
-  getSavedLoginConfig,
-  saveLoginCredentials,
-  setLoginAutoLogin
-} from '@/lib/api/user'
+import { getSavedLoginConfig, saveLoginCredentials, setLoginAutoLogin } from '@/lib/api/user'
 import { queryKeys } from '@/lib/query-keys'
 import { useSettingsStore } from '@/stores/settings-store'
 import { AccountSection } from './account-section'
@@ -237,7 +233,7 @@ export function SettingsPage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto w-full max-w-5xl space-y-8 p-[96px_32px_32px_96px]">
+      <div className="mx-auto w-full max-w-5xl space-y-8 p-[32px_32px_16px_96px]">
         <header className="flex items-end justify-between gap-4">
           <div>
             <h1 className="text-3xl font-semibold tracking-normal">设置</h1>

@@ -24,7 +24,7 @@ export function DownloadsPage() {
   } = useDownloadTasks()
 
   return (
-    <main className="min-h-screen bg-background p-[96px_32px_32px_96px] text-foreground">
+    <main className="min-h-screen bg-background p-[32px_32px_16px_96px] text-foreground">
       <div className="mx-auto max-w-6xl space-y-6">
         <header className="flex items-end justify-between gap-4">
           <div>

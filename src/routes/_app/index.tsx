@@ -33,7 +33,7 @@ function HomePage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <div className="grid grid-cols-[minmax(0,1fr)_180px] gap-8 p-[96px_32px_16px_96px]">
+      <div className="grid grid-cols-[minmax(0,1fr)_180px] gap-8 p-[32px_32px_16px_96px]">
         <div className="min-w-0 space-y-10">
           <FeedHeader
             title="首页"

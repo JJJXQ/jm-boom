@@ -149,7 +149,7 @@ function WeeklyPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-[96px_32px_16px_96px]">
+    <div className="flex flex-col gap-4 p-[32px_32px_16px_96px]">
       <PageBackButton />
       <FeedHeader
         title="每周推荐"

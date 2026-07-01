@@ -65,7 +65,7 @@ function MePage() {
   }
 
   return (
-    <main className="h-screen p-[96px_32px_32px_96px]">
+    <main className="h-screen p-[32px_32px_16px_96px]">
       <PageHeader title="个人中心" desc="展示用户信息">
         <div className="flex items-center gap-3">
           <Button variant="outline" size="sm" disabled>
