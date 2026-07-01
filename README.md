@@ -16,15 +16,13 @@
 
 ![JM Boom 截图 11](screenshot/ScreenShot_2026-07-01_170104_487.png)
 
+![JM Boom 截图 11](screenshot/ScreenShot_2026-07-01_183044_419.png)
+
 ![JM Boom 截图 2](screenshot/ScreenShot_2026-06-27_002725_560.png)
 
 ![JM Boom 截图 3](screenshot/ScreenShot_2026-06-27_002735_186.png)
 
 ![JM Boom 截图 4](screenshot/ScreenShot_2026-06-27_002758_753.png)
-
-![JM Boom 截图 5](screenshot/ScreenShot_2026-06-27_002814_315.png)
-
-![JM Boom 截图 9](screenshot/ScreenShot_2026-06-29_002045_218.png)
 
 ![JM Boom 截图 6](screenshot/ScreenShot_2026-06-27_002820_731.png)
 
