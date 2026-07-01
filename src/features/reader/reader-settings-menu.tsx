@@ -26,6 +26,9 @@ const READER_SETTING_BUTTON_CLASS =
 const READER_SETTING_ITEM_CLASS =
   'text-neutral-100 focus:bg-white/10 focus:text-neutral-50 [&_svg]:text-neutral-300'
 
+const READER_SETTING_SWITCH_CLASS =
+  'border-white/20 data-checked:bg-neutral-100 data-unchecked:bg-white/20 dark:data-unchecked:bg-white/20 [&_[data-slot=switch-thumb]]:data-checked:bg-neutral-950 [&_[data-slot=switch-thumb]]:data-unchecked:bg-neutral-100'
+
 export function ReaderSettingsMenu() {
   const readerReadMode = useSettingsStore(state => state.readerReadMode)
   const readerPageDirection = useSettingsStore(state => state.readerPageDirection)
@@ -104,6 +107,7 @@ export function ReaderSettingsMenu() {
           <Switch
             checked={readerDoublePageMode}
             disabled={!isSingleMode}
+            className={READER_SETTING_SWITCH_CLASS}
             onCheckedChange={setReaderDoublePageMode}
           />
         </div>
@@ -113,7 +117,11 @@ export function ReaderSettingsMenu() {
             <div className="text-sm text-neutral-100">自动阅读</div>
             <div className="mt-0.5 text-xs text-neutral-500">隐藏控制栏时自动推进</div>
           </div>
-          <Switch checked={readerAutoReadEnabled} onCheckedChange={setReaderAutoReadEnabled} />
+          <Switch
+            checked={readerAutoReadEnabled}
+            className={READER_SETTING_SWITCH_CLASS}
+            onCheckedChange={setReaderAutoReadEnabled}
+          />
         </div>
         {readerAutoReadEnabled ? (
           <div className="space-y-3 px-3 pt-1 pb-3">
