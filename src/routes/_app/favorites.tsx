@@ -14,7 +14,6 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { getFavoriteComics } from '@/lib/api/comic'
-import { FAVORITES_QUERY_GC_TIME, FAVORITES_QUERY_STALE_TIME } from '@/lib/query-cache'
 import { queryKeys } from '@/lib/query-keys'
 import { useSettingsStore } from '@/stores/settings-store'
 import { useUserStore } from '@/stores/user-store'
@@ -43,9 +42,11 @@ function FavoritesPage() {
         folderId: activeFolderId,
         endpoint
       }),
-    staleTime: FAVORITES_QUERY_STALE_TIME,
-    gcTime: FAVORITES_QUERY_GC_TIME,
-    refetchOnWindowFocus: false
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true
   })
   const folders = useMemo(
     () => [
@@ -64,16 +65,11 @@ function FavoritesPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto w-full max-w-6xl space-y-6 p-[32px_32px_16px_96px]">
-        <FeedHeader
-          title="收藏"
-          description="云端收藏的漫画作品"
-          isFetching={favorites.isFetching}
-          onRefresh={() => favorites.refetch()}
-        />
+    <main className="relative min-h-screen bg-background text-foreground">
+      <div className="mx-auto grid min-h-screen w-full max-w-6xl grid-rows-[auto_auto_1fr] gap-6 p-[32px_32px_16px_96px]">
+        <FeedHeader title="收藏" description="同步禁漫天堂云收藏" />
 
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
           <Select value={folderId} onValueChange={changeFolder}>
             <SelectTrigger>
               <BookmarkIcon className="size-4 text-muted-foreground" />
@@ -89,52 +85,57 @@ function FavoritesPage() {
               </SelectGroup>
             </SelectContent>
           </Select>
-
-          {favorites.data ? (
-            <p className="text-sm text-muted-foreground">
-              共 {favorites.data.total} 部作品 · 第 {page} 页
-            </p>
-          ) : null}
         </div>
 
-        {favorites.isError ? (
-          <StatePanel
-            title="收藏加载失败"
-            description={favorites.error.message}
-            onRetry={() => favorites.refetch()}
-          />
-        ) : favorites.isLoading ? (
-          <ComicGridSkeleton />
-        ) : favorites.data == null || favorites.data.items.length === 0 ? (
-          <StatePanel title="暂无收藏" description="当前收藏夹没有可展示的漫画。" />
-        ) : (
-          <>
-            <ComicGrid items={favorites.data.items} />
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={page <= 1 || favorites.isFetching}
-                onClick={() => setPage(current => Math.max(1, current - 1))}
-              >
-                <ChevronLeftIcon className="size-4" />
-                上一页
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={!favorites.data.hasMore || favorites.isFetching}
-                onClick={() => setPage(current => current + 1)}
-              >
-                下一页
-                <ChevronRightIcon className="size-4" />
-              </Button>
+        <section className="min-h-0">
+          {favorites.isError ? (
+            <StatePanel
+              title="收藏加载失败"
+              description={favorites.error.message}
+              onRetry={() => favorites.refetch()}
+            />
+          ) : favorites.isLoading ? (
+            <ComicGridSkeleton />
+          ) : favorites.data == null || favorites.data.items.length === 0 ? (
+            <FavoritesEmptyState />
+          ) : (
+            <div className="space-y-6">
+              <ComicGrid items={favorites.data.items} />
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1 || favorites.isFetching}
+                  onClick={() => setPage(current => Math.max(1, current - 1))}
+                >
+                  <ChevronLeftIcon className="size-4" />
+                  上一页
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={!favorites.data.hasMore || favorites.isFetching}
+                  onClick={() => setPage(current => current + 1)}
+                >
+                  下一页
+                  <ChevronRightIcon className="size-4" />
+                </Button>
+              </div>
             </div>
-          </>
-        )}
+          )}
+        </section>
       </div>
     </main>
+  )
+}
+
+function FavoritesEmptyState() {
+  return (
+    <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-4 text-center">
+      <p className="text-6xl font-bold text-foreground">(･o･;)</p>
+      <p className="text-sm text-muted-foreground">暂无收藏的漫画</p>
+    </div>
   )
 }

@@ -1,8 +1,5 @@
 export const LIST_QUERY_STALE_TIME = 30 * 60 * 1000
 export const LIST_QUERY_GC_TIME = 6 * 60 * 60 * 1000
 
-export const FAVORITES_QUERY_STALE_TIME = 10 * 60 * 1000
-export const FAVORITES_QUERY_GC_TIME = 60 * 60 * 1000
-
 export const LONG_LIVED_FILTERS_STALE_TIME = 12 * 60 * 60 * 1000
 export const LONG_LIVED_FILTERS_GC_TIME = 24 * 60 * 60 * 1000
