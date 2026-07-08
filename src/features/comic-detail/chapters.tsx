@@ -60,10 +60,7 @@ export function ChaptersSection({
 
   return (
     <section id="chapters" className="scroll-mt-8 space-y-4">
-      <SectionHeading
-        title="章节"
-        description={`${displayChapterCount} 个章节${pageCount > 1 ? `，第 ${safePage}/${pageCount} 页` : ''}`}
-      />
+      <SectionHeading title="章节" description={`${displayChapterCount} 个章节`} />
       {sortedChapters.length === 0 ? (
         <Link
           to="/reader/$comicId"
