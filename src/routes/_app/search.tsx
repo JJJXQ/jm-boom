@@ -4,9 +4,11 @@ import { ListFilterIcon, SearchIcon } from 'lucide-react'
 import { FormEvent, useEffect, useState } from 'react'
 
 import { BackTopButton } from '@/components/back-top-button'
-import { ComicGrid, ComicGridSkeleton, FeedHeader, StatePanel } from '@/components/comic-feed'
+import { ComicGrid, ComicGridSkeleton, FeedHeader } from '@/components/comic'
+import { EmptyState } from '@/components/empty-state'
 import { ListPagination } from '@/components/list-pagination'
 import { PageBackButton } from '@/components/page-back-button'
+import { Button } from '@/components/ui/button'
 import {
   InputGroup,
   InputGroupAddon,
@@ -168,7 +170,6 @@ function SearchPage() {
         <SearchContent
           keyword={keyword}
           isError={query.isError}
-          errorMessage={query.error?.message}
           isLoading={query.isLoading}
           items={items}
           page={search.page}
@@ -186,7 +187,6 @@ function SearchPage() {
 function SearchContent({
   keyword,
   isError,
-  errorMessage,
   isLoading,
   items,
   page,
@@ -197,7 +197,6 @@ function SearchContent({
 }: {
   keyword: string
   isError: boolean
-  errorMessage?: string
   isLoading: boolean
   items: ReturnType<typeof mapSearchItems>
   page: number
@@ -207,11 +206,21 @@ function SearchContent({
   onPageChange: (page: number) => void
 }) {
   if (keyword.length === 0) {
-    return <StatePanel title="输入关键词开始搜索" description="支持作品名、作者、标签或 JM 号。" />
+    return null // 不显示任何提示
   }
 
   if (isError) {
-    return <StatePanel title="搜索失败" description={errorMessage} onRetry={onRetry} />
+    return (
+      <EmptyState
+        emoji="Ò︵Ó"
+        title="数据加载失败"
+        actions={
+          <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+            重试
+          </Button>
+        }
+      />
+    )
   }
 
   if (isLoading) {
@@ -219,7 +228,7 @@ function SearchContent({
   }
 
   if (items.length === 0) {
-    return <StatePanel title="没有搜索结果" description="换个关键词或排序方式再试试。" />
+    return <EmptyState emoji="(･o･;)" title="没有搜索结果" />
   }
 
   return (

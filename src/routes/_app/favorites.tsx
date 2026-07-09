@@ -4,9 +4,10 @@ import { BookmarkIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import { BackTopButton } from '@/components/back-top-button'
-import { ComicGrid, ComicGridSkeleton, FeedHeader, StatePanel } from '@/components/comic-feed'
+import { ComicGrid, ComicGridSkeleton, FeedHeader } from '@/components/comic'
 import { EmptyState } from '@/components/empty-state'
 import { ListPagination } from '@/components/list-pagination'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
@@ -91,10 +92,14 @@ function FavoritesPage() {
 
         <section className="min-h-0">
           {favorites.isError ? (
-            <StatePanel
-              title="收藏加载失败"
-              description={favorites.error.message}
-              onRetry={() => favorites.refetch()}
+            <EmptyState
+              emoji="Ò︵Ó"
+              title="数据加载失败"
+              actions={
+                <Button type="button" variant="outline" size="sm" onClick={() => favorites.refetch()}>
+                  重试
+                </Button>
+              }
             />
           ) : favorites.isLoading ? (
             <ComicGridSkeleton />

@@ -1,7 +1,6 @@
-import { StatePanel } from '@/components/comic-feed'
 import { UI } from '@/lib/constants'
 
-export { ComicCover } from '@/components/comic-cover'
+export { ComicCover } from '@/components/comic'
 
 export function SectionHeading({ title, description }: { title: string; description: string }) {
   return (
@@ -63,8 +62,6 @@ export function CommentSkeletonList() {
     </div>
   )
 }
-
-export { StatePanel }
 
 function ChapterSkeletonList() {
   return (

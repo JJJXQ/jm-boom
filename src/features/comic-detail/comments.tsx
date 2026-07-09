@@ -9,7 +9,9 @@ import {
 } from '@/components/ui/drawer'
 import type { ComicComment } from '@/lib/api/comic'
 import { formatNumber } from '@/lib/format'
-import { CommentSkeletonList, StatePanel } from './shared'
+import { CommentSkeletonList } from './shared'
+import { EmptyState } from '@/components/empty-state'
+import { Button } from '@/components/ui/button'
 import { useCallback } from 'react'
 
 const CHINESE_DATE_FORMATTER = new Intl.DateTimeFormat('zh-CN', {
@@ -67,13 +69,17 @@ export function CommentsDrawer({ open, onOpenChange, state }: CommentsDrawerProp
           {state.isLoading ? (
             <CommentSkeletonList />
           ) : state.isError ? (
-            <StatePanel
-              title="评论加载失败"
-              description={state.errorMessage}
-              onRetry={state.onRetry}
+            <EmptyState
+              emoji="Ò︵Ó"
+              title="数据加载失败"
+              actions={
+                <Button type="button" variant="outline" size="sm" onClick={state.onRetry}>
+                  重试
+                </Button>
+              }
             />
           ) : state.comments.length === 0 ? (
-            <StatePanel title="暂无评论" description="当前作品还没有返回评论内容。" />
+            <EmptyState emoji="(･o･;)" title="暂无评论" />
           ) : (
             <div className="space-y-5">
               {state.comments.map(comment => (

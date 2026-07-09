@@ -1,4 +1,4 @@
-import { ComicGridSkeleton } from '@/components/comic-feed'
+import { ComicGridSkeleton } from '@/components/comic'
 
 export function HomeFeedSkeleton() {
   return (

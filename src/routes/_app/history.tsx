@@ -4,11 +4,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import { BackTopButton } from '@/components/back-top-button'
+import { ComicCard } from '@/components/comic'
 import { EmptyState } from '@/components/empty-state'
 import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
-import { HistoryCard } from '@/features/history/history-card'
 import { ClearHistoryDialog, DeleteSelectedHistoryDialog } from '@/features/history/history-dialogs'
+import { formatDate } from '@/lib/format'
 import { useReadingHistoryStore } from '@/stores/reading-history-store'
 
 export const Route = createFileRoute('/_app/history')({
@@ -139,15 +140,50 @@ function HistoryPage() {
           <EmptyState emoji="(˙ᯅ˙)" title="暂无历史观看记录" />
         ) : (
           <div className="grid grid-cols-4 gap-6">
-            {sortedItems.map(item => (
-              <HistoryCard
-                key={item.comicId}
-                item={item}
-                isSelecting={isSelecting}
-                isSelected={selectedComicIds.has(item.comicId)}
-                onSelectionChange={toggleItemSelection}
-              />
-            ))}
+            {sortedItems.map(item => {
+              const progress = (item.pageIndex + 1) / item.pageCount
+              return (
+                <ComicCard
+                  key={item.comicId}
+                  comic={{
+                    id: item.comicId,
+                    title: item.title,
+                    image: item.coverUrl?.trim() ?? ''
+                  }}
+                  ratio="square"
+                  showIdBadge
+                  progress={progress}
+                  selectable={isSelecting}
+                  selected={selectedComicIds.has(item.comicId)}
+                  onSelect={toggleItemSelection}
+                  linkProps={
+                    !isSelecting
+                      ? {
+                          to: '/reader/$comicId',
+                          params: { comicId: item.chapterId },
+                          search: {
+                            title: item.title,
+                            chapter: item.chapterTitle,
+                            albumId: item.albumId,
+                            fromDetail: '',
+                            pageIndex: String(item.pageIndex),
+                            nextId: '',
+                            nextChapter: ''
+                          }
+                        }
+                      : undefined
+                  }
+                  metadata={
+                    <>
+                      <p className="line-clamp-1 text-xs text-muted-foreground">{item.chapterTitle}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.pageIndex + 1}/{item.pageCount} • {formatDate(item.updatedAt)}
+                      </p>
+                    </>
+                  }
+                />
+              )
+            })}
           </div>
         )}
       </div>

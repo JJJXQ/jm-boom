@@ -24,7 +24,9 @@ import { ChaptersSection } from './chapters'
 import { CommentsDrawer } from './comments'
 import { ComicHero } from './hero'
 import { RelatedPanel } from './related'
-import { ComicDetailSkeleton, StatePanel } from './shared'
+import { ComicDetailSkeleton } from './shared'
+import { EmptyState } from '@/components/empty-state'
+import { Button } from '@/components/ui/button'
 import { useSettingsStore } from '@/stores/settings-store'
 import {
   ComicDownloadDrawer,
@@ -52,13 +54,17 @@ export function ComicDetailPage({ comicId }: { comicId: string }) {
         {detail.isLoading ? (
           <ComicDetailSkeleton />
         ) : detail.isError ? (
-          <StatePanel
-            title="详情加载失败"
-            description={detail.error.message}
-            onRetry={() => detail.refetch()}
+          <EmptyState
+            emoji="Ò︵Ó"
+            title="数据加载失败"
+            actions={
+              <Button type="button" variant="outline" size="sm" onClick={() => detail.refetch()}>
+                重试
+              </Button>
+            }
           />
         ) : detail.data == null ? (
-          <StatePanel title="暂无详情" description="当前作品没有返回可展示的详情。" />
+          <EmptyState emoji="(･o･;)" title="暂无详情" />
         ) : (
           <ComicDetailView comic={detail.data.comic} />
         )}

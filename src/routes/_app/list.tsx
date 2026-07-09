@@ -2,9 +2,11 @@ import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { BackTopButton } from '@/components/back-top-button'
-import { ComicGrid, ComicGridSkeleton, FeedHeader, StatePanel } from '@/components/comic-feed'
+import { ComicGrid, ComicGridSkeleton, FeedHeader } from '@/components/comic'
+import { EmptyState } from '@/components/empty-state'
 import { ListPagination } from '@/components/list-pagination'
 import { PageBackButton } from '@/components/page-back-button'
+import { Button } from '@/components/ui/button'
 import { getHomeSectionList, type HomeSectionListMode } from '@/lib/api/home'
 import { CACHE } from '@/lib/constants'
 import { queryKeys } from '@/lib/query-keys'
@@ -161,15 +163,19 @@ function HomeSectionListPage() {
         />
 
         {query.isError ? (
-          <StatePanel
-            title="列表加载失败"
-            description={query.error.message}
-            onRetry={() => query.refetch()}
+          <EmptyState
+            emoji="Ò︵Ó"
+            title="数据加载失败"
+            actions={
+              <Button type="button" variant="outline" size="sm" onClick={() => query.refetch()}>
+                重试
+              </Button>
+            }
           />
         ) : query.isLoading ? (
           <ComicGridSkeleton count={12} />
         ) : items.length === 0 ? (
-          <StatePanel title="暂无内容" description="当前筛选条件下没有可展示的漫画。" />
+          <EmptyState emoji="(･o･;)" title="暂无内容" />
         ) : (
           <>
             <ComicGrid items={items} />

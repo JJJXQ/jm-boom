@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { FeedHeader, StatePanel } from '@/components/comic-feed'
+import { FeedHeader } from '@/components/comic'
+import { EmptyState } from '@/components/empty-state'
+import { Button } from '@/components/ui/button'
 import { getHomeFeed, type HomeFeedSection } from '@/lib/api/home'
 import { CACHE } from '@/lib/constants'
 import { queryKeys } from '@/lib/query-keys'
@@ -33,13 +35,17 @@ export function HomePage() {
           {homeFeed.isLoading ? (
             <HomeFeedSkeleton />
           ) : homeFeed.isError ? (
-            <StatePanel
-              title="信息流加载失败"
-              description={homeFeed.error.message}
-              onRetry={() => homeFeed.refetch()}
+            <EmptyState
+              emoji="Ò︵Ó"
+              title="数据加载失败"
+              actions={
+                <Button type="button" variant="outline" size="sm" onClick={() => homeFeed.refetch()}>
+                  重试
+                </Button>
+              }
             />
           ) : sections.length === 0 ? (
-            <StatePanel title="暂无信息流内容" description="当前接口没有返回可展示的分组。" />
+            <EmptyState emoji="(･o･;)" title="暂无信息流内容" />
           ) : (
             <HomeFeedSections sections={sections} />
           )}

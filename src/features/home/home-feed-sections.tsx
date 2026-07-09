@@ -1,7 +1,8 @@
 import { Link } from '@tanstack/react-router'
 import { ArrowRightIcon } from 'lucide-react'
 
-import { ComicGrid, StatePanel } from '@/components/comic-feed'
+import { ComicGrid } from '@/components/comic'
+import { EmptyState } from '@/components/empty-state'
 import { Button } from '@/components/ui/button'
 import type { HomeFeedSection } from '@/lib/api/home'
 import { currentChinaWeekday } from '@/lib/date'
@@ -15,7 +16,7 @@ export function HomeFeedSections({ sections }: { sections: HomeFeedSection[] }) 
         <section key={section.id} id={homeSectionId(section)} className="scroll-mt-8 space-y-6">
           <SectionHeader section={section} />
           {section.items.length === 0 ? (
-            <StatePanel title="暂无内容" description="当前分组没有返回可展示的漫画。" />
+            <EmptyState emoji="(･o･;)" title="暂无内容" />
           ) : (
             <ComicGrid items={section.items} />
           )}

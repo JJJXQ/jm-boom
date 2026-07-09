@@ -4,8 +4,10 @@ import { CalendarDaysIcon } from 'lucide-react'
 import { useEffect } from 'react'
 
 import { BackTopButton } from '@/components/back-top-button'
-import { ComicGrid, ComicGridSkeleton, FeedHeader, StatePanel } from '@/components/comic-feed'
+import { ComicGrid, ComicGridSkeleton, FeedHeader } from '@/components/comic'
+import { EmptyState } from '@/components/empty-state'
 import { PageBackButton } from '@/components/page-back-button'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
@@ -124,10 +126,14 @@ function WeeklyPage() {
         <FeedHeader title="每周推荐" description="为你精选的本周热门作品" />
 
         {filters.isError ? (
-          <StatePanel
-            title="每周推荐筛选加载失败"
-            description={filters.error.message}
-            onRetry={() => filters.refetch()}
+          <EmptyState
+            emoji="Ò︵Ó"
+            title="数据加载失败"
+            actions={
+              <Button type="button" variant="outline" size="sm" onClick={() => filters.refetch()}>
+                重试
+              </Button>
+            }
           />
         ) : (
           <>
@@ -169,15 +175,19 @@ function WeeklyPage() {
 
             <section>
               {items.isError ? (
-                <StatePanel
-                  title="每周推荐加载失败"
-                  description={items.error.message}
-                  onRetry={() => items.refetch()}
+                <EmptyState
+                  emoji="Ò︵Ó"
+                  title="数据加载失败"
+                  actions={
+                    <Button type="button" variant="outline" size="sm" onClick={() => items.refetch()}>
+                      重试
+                    </Button>
+                  }
                 />
               ) : !canLoadItems || items.isLoading ? (
                 <ComicGridSkeleton />
               ) : items.data == null || items.data.items.length === 0 ? (
-                <StatePanel title="暂无每周推荐" description="当前筛选条件下没有内容。" />
+                <EmptyState emoji="(･o･;)" title="暂无每周推荐" />
               ) : (
                 <ComicGrid items={items.data.items} />
               )}
