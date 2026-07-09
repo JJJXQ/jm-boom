@@ -21,19 +21,31 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build portable app
-        run: bun run tauri build -- --no-bundle
+        run: bunx tauri build --no-bundle
 
-      - name: Prepare artifact
+      - name: Prepare package
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path out | Out-Null
-          Copy-Item "src-tauri/target/release/jm-boom.exe" "out/"
-          if (Test-Path "src-tauri/target/release/*.dll") {
-            Copy-Item "src-tauri/target/release/*.dll" "out/"
+          $outDir = "portable"
+          $zipPath = "jm-boom-windows-portable.zip"
+
+          if (Test-Path $outDir) {
+            Remove-Item -LiteralPath $outDir -Recurse -Force
           }
+
+          New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+
+          Copy-Item "src-tauri/target/release/jm-boom.exe" "$outDir/"
+          Get-ChildItem "src-tauri/target/release" -Filter "*.dll" -ErrorAction SilentlyContinue | Copy-Item -Destination $outDir
+
+          if (Test-Path $zipPath) {
+            Remove-Item -LiteralPath $zipPath -Force
+          }
+
+          Compress-Archive -Path "$outDir/*" -DestinationPath $zipPath
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: jm-boom-windows-portable
-          path: out/*
+          path: jm-boom-windows-portable.zip
