@@ -1,7 +1,7 @@
 [package]
 name = "jm-boom"
-version = "0.4.5"
-description = "Free and open source cross-platform manga reader"
+version = "0.4.6"
+description = "Free and open source cross-platform jm manga reader"
 authors = ["ppxb"]
 edition = "2021"
 
