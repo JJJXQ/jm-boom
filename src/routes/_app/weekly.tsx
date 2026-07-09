@@ -21,7 +21,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getWeekFilters, getWeekItems } from '@/lib/api/home'
 import { CACHE } from '@/lib/constants'
 import { queryKeys } from '@/lib/query-keys'
-import { parseStringSearch } from '@/lib/route-search'
+import { parseStringSearch } from '@/lib/utils'
 import { useSettingsStore } from '@/stores/settings-store'
 
 type WeeklySearch = {

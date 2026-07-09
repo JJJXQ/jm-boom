@@ -7,8 +7,13 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
-import { rankingCategoryOptions, RANKING_ORDER_OPTIONS, type FilterOption } from '@/lib/ranking-filters'
-import { WEEK_CATEGORY_OPTIONS, WEEK_OPTIONS } from './constants'
+import {
+  rankingCategoryOptions,
+  RANKING_ORDER_OPTIONS,
+  WEEK_CATEGORY_OPTIONS,
+  WEEK_OPTIONS,
+  type FilterOption
+} from '@/lib/filters'
 
 interface SectionFiltersProps {
   mode: HomeSectionListMode

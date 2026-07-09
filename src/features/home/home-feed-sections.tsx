@@ -5,8 +5,8 @@ import { ComicGrid } from '@/components/comic'
 import { EmptyState } from '@/components/empty-state'
 import { Button } from '@/components/ui/button'
 import type { HomeFeedSection } from '@/lib/api/home'
-import { currentChinaWeekday } from '@/lib/date'
-import { defaultRankingCategory } from '@/lib/ranking-filters'
+import { currentChinaWeekday } from '@/lib/utils'
+import { defaultRankingCategory } from '@/lib/filters'
 import { homeSectionId } from './home-utils'
 
 export function HomeFeedSections({ sections }: { sections: HomeFeedSection[] }) {

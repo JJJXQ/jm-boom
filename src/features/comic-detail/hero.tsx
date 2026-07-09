@@ -232,7 +232,7 @@ function SearchLinks({
               page: 1,
               sortBy: 1
             }}
-            className="max-w-[28rem] truncate underline-offset-4 hover:text-foreground hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+            className="max-w-md truncate underline-offset-4 hover:text-foreground hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
           >
             {item}
           </Link>

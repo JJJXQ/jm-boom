@@ -27,7 +27,7 @@ import {
 import { searchComic, type ComicListItem } from '@/lib/api/search'
 import { CACHE } from '@/lib/constants'
 import { queryKeys } from '@/lib/query-keys'
-import { parsePositivePage } from '@/lib/route-search'
+import { parsePositivePage } from '@/lib/utils'
 import { useSettingsStore } from '@/stores/settings-store'
 
 type SearchPageSearch = {

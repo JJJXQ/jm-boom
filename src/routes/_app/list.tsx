@@ -11,10 +11,10 @@ import { Button } from '@/components/ui/button'
 import { getHomeSectionList, type HomeSectionListMode } from '@/lib/api/home'
 import { CACHE } from '@/lib/constants'
 import { queryKeys } from '@/lib/query-keys'
-import { rankingCategoryApiValue } from '@/lib/ranking-filters'
-import { parsePositivePage, parseStringSearch } from '@/lib/route-search'
+import { rankingCategoryApiValue } from '@/lib/filters'
+import { parsePositivePage, parseStringSearch } from '@/lib/utils'
 import { useSettingsStore } from '@/stores/settings-store'
-import { SectionFilters } from '@/features/list/list-filters'
+import { SectionFilters } from '@/features/section-list/section-filters'
 import {
   isHomeSectionListMode,
   parseListCategory,
@@ -22,7 +22,7 @@ import {
   parseListWeek,
   sectionModeDescription,
   sectionModeTitle
-} from '@/features/list/validation'
+} from '@/features/section-list/section-utils'
 
 type HomeSectionListSearch = {
   mode: HomeSectionListMode
