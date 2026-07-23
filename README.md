@@ -11,6 +11,7 @@
 > \[!IMPORTANT]
 >
 > `Linux` 和 `MacOS` 的构建未经过任何测试。
+> 如果你需要前后端构建版本，可以切换到 `feat/docker` 分支查看部署方式。
 
 ### MacOS 安装
 
@@ -100,13 +101,3 @@ bun run tauri dev
 ## License
 
 遵循 [MIT](./LICENSE) 协议。
-
-## Star History
-
-<a href="https://www.star-history.com/?repos=ppxb%2Fjm-boom&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=ppxb/jm-boom&type=date&theme=dark&legend=top-left&sealed_token=xBdzI13ThPSrBmsH1hTwkJ4k3BeQH7GmAkzvOlPpvyQDS8IMlHCI00IiBHU4zpMhErHtg6nTgZdwthEO1yDLoenKZOo1owHT7pObsu8FOq_2KI80Aw1RoDW-3oaLeFdGzqs0F3DVRs-3fyEn92_Hi32SmjeVMoSF0IcSPo6z7VixmjZhG2B66b5GL_eI" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=ppxb/jm-boom&type=date&legend=top-left&sealed_token=xBdzI13ThPSrBmsH1hTwkJ4k3BeQH7GmAkzvOlPpvyQDS8IMlHCI00IiBHU4zpMhErHtg6nTgZdwthEO1yDLoenKZOo1owHT7pObsu8FOq_2KI80Aw1RoDW-3oaLeFdGzqs0F3DVRs-3fyEn92_Hi32SmjeVMoSF0IcSPo6z7VixmjZhG2B66b5GL_eI" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=ppxb/jm-boom&type=date&legend=top-left&sealed_token=xBdzI13ThPSrBmsH1hTwkJ4k3BeQH7GmAkzvOlPpvyQDS8IMlHCI00IiBHU4zpMhErHtg6nTgZdwthEO1yDLoenKZOo1owHT7pObsu8FOq_2KI80Aw1RoDW-3oaLeFdGzqs0F3DVRs-3fyEn92_Hi32SmjeVMoSF0IcSPo6z7VixmjZhG2B66b5GL_eI" />
- </picture>
-</a>
